@@ -1,0 +1,78 @@
+export const COLORS = {
+  // Primary palette - Warm & Cozy
+  CREAM: 0xFDF8F3,
+  WARM_WHITE: 0xFEF9F3,
+  SOFT_PEACH: 0xFFE8D6,
+  
+  // Accent colors - Vibrant but warm
+  CORAL: 0xFF6B5B,
+  CORAL_DARK: 0xE85A4A,
+  SAGE: 0x7CB69D,
+  SAGE_DARK: 0x5A9A7C,
+  SKY: 0x6BAED6,
+  SKY_DARK: 0x4A8FC4,
+  MUSTARD: 0xF4B942,
+  MUSTARD_DARK: 0xD9A23A,
+  LAVENDER: 0x9B8EC4,
+  LAVENDER_DARK: 0x7B6EA4,
+  
+  // Neutrals
+  CHARCOAL: 0x3D3D3D,
+  GRAPHITE: 0x5A5A5A,
+  SOFT_GRAY: 0x9A9A9A,
+  WHITE: 0xFFFFFF,
+  OFF_WHITE: 0xF8F9FA,
+  
+  // Semantic colors
+  SUCCESS: 0x7CB69D,
+  SUCCESS_LIGHT: 0xA3D4BE,
+  WARNING: 0xF4B942,
+  ERROR: 0xFF6B5B,
+  
+  // Puzzle type colors
+  SORT_PRIMARY: 0xFF6B5B,
+  SORT_SECONDARY: 0xFF8A7A,
+  UNTANGLE_PRIMARY: 0x7CB69D,
+  UNTANGLE_SECONDARY: 0x9DC9B6,
+  PACK_PRIMARY: 0x6BAED6,
+  PACK_SECONDARY: 0x8FC5E5,
+  
+  // Game elements
+  BALL_RED: 0xFF6B5B,
+  BALL_BLUE: 0x6BAED6,
+  BALL_GREEN: 0x7CB69D,
+  BALL_YELLOW: 0xF4B942,
+  BALL_PURPLE: 0x9B8EC4,
+  BALL_ORANGE: 0xF4A261,
+  BALL_PINK: 0xE8A0BF,
+  BALL_TEAL: 0x4ECDC4,
+  
+  // UI
+  BUTTON_PRIMARY: 0xFF6B5B,
+  BUTTON_SECONDARY: 0x6BAED6,
+  BUTTON_SUCCESS: 0x7CB69D,
+  PANEL_BG: 0xFEF9F3,
+  OVERLAY: 0x3D3D3D,
+  
+  // Legacy aliases for compatibility
+  RED: 0xFF6B5B,
+  BLUE: 0x6BAED6,
+  GREEN: 0x7CB69D,
+  YELLOW: 0xF4B942,
+  PURPLE: 0x9B8EC4,
+  PINK: 0xE8A0BF,
+  ORANGE: 0xF4A261,
+  TEAL: 0x4ECDC4,
+  GRAY: 0x9A9A9A,
+  PRIMARY: 0xFF6B5B,
+  PRIMARY_LIGHT: 0xFF8A7A,
+  ACCENT: 0xF4B942,
+};
+
+export function colorToHex(color: number): string {
+  return '#' + color.toString(16).padStart(6, '0').toUpperCase();
+}
+
+export function hexToColor(hex: string): number {
+  return parseInt(hex.replace('#', ''), 16);
+}

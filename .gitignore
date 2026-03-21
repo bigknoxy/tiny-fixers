@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+bun.lock
+
+# Build output
+dist/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Cache
+.ruff_cache/
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+
+# Temporary files
+*~
+*.tmp
+
+# Opencode skill dependencies (managed separately)
+.opencode/node_modules/
+.opencode/bun.lock

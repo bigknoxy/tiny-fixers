@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Generating Icons</title>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const sizes = [192, 512];
+    sizes.forEach(size => {
+      const canvas = document.getElementById('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      ctx.fillStyle = '#4A90D9';
+      ctx.beginPath();
+      ctx.roundRect(0, 0, size, size, size * 0.125);
+      ctx.fill();
+      
+      // Tool emoji representation (wrench shape)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = size * 0.08;
+      ctx.lineCap = 'round';
+      
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const wrenchSize = size * 0.3;
+      
+      // Draw wrench
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(-Math.PI / 4);
+      
+      // Handle
+      ctx.fillRect(-wrenchSize * 0.15, -wrenchSize * 0.6, wrenchSize * 0.3, wrenchSize * 1.2);
+      
+      // Head
+      ctx.beginPath();
+      ctx.arc(0, -wrenchSize * 0.6, wrenchSize * 0.4, Math.PI, 0);
+      ctx.fill();
+      
+      // Opening
+      ctx.fillStyle = '#4A90D9';
+      ctx.fillRect(-wrenchSize * 0.12, -wrenchSize * 0.9, wrenchSize * 0.24, wrenchSize * 0.3);
+      
+      ctx.restore();
+      
+      // Download
+      const link = document.createElement('a');
+      link.download = `icon-${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  </script>
+</body>
+</html>
