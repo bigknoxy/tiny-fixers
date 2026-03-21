@@ -16,6 +16,7 @@ interface GameEventMap {
   'audio:muted': { muted: boolean };
   'tutorial:completed': void;
   'coins:changed': { amount: number; total: number };
+  'world:unlocked': { worldId: string };
 }
 
 type EventCallback<K extends keyof GameEventMap> = (data: GameEventMap[K]) => void;

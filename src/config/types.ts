@@ -4,6 +4,16 @@ export enum PuzzleType {
   PACK = 'pack',
 }
 
+export interface WorldData {
+  id: string;
+  name: string;
+  description: string;
+  color: number;
+  icon: string;
+  levelIds: string[];
+  requiredStars: number;
+}
+
 export interface Vector2 {
   x: number;
   y: number;
@@ -175,6 +185,7 @@ export interface ProgressState {
   unlockedPuzzles: string[];
   unlockedCharacters: string[];
   unlockedDecorations: string[];
+  unlockedWorlds: string[];
 }
 
 export interface EconomyState {
