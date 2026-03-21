@@ -47,12 +47,37 @@ export class SettingsScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     container.add([bg, arrow]);
-    container.setSize(40, 40);
-    container.setInteractive({ useHandCursor: true });
+    
+    container.setInteractive(
+      new Phaser.Geom.Circle(0, 0, 20),
+      Phaser.Geom.Circle.Contains
+    );
+
+    container.on('pointerover', () => {
+      bg.setFillStyle(COLORS.WHITE, 0.35);
+      this.tweens.add({ targets: container, scale: 1.1, duration: 100 });
+    });
+
+    container.on('pointerout', () => {
+      bg.setFillStyle(COLORS.WHITE, 0.2);
+      this.tweens.add({ targets: container, scale: 1, duration: 100 });
+    });
+
+    container.on('pointerdown', () => {
+      this.tweens.add({ targets: container, scale: 0.95, duration: 50 });
+    });
 
     container.on('pointerup', () => {
-      AudioManager.playSound('click');
-      this.scene.start('HomeScene');
+      this.tweens.add({ 
+        targets: container, 
+        scale: 1, 
+        duration: 100,
+        ease: 'Back.out',
+        onComplete: () => {
+          AudioManager.playSound('click');
+          this.scene.start('HomeScene');
+        }
+      });
     });
 
     return container;

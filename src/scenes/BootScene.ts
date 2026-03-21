@@ -243,7 +243,11 @@ export class BootScene extends Phaser.Scene {
         }, 400);
       }
 
-      this.scene.start('HomeScene');
+      if (!StateManager.isTutorialCompleted()) {
+        this.scene.start('TutorialScene');
+      } else {
+        this.scene.start('HomeScene');
+      }
     });
   }
 

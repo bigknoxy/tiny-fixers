@@ -30,6 +30,7 @@ function createDefaultPlayer(): PlayerState {
     createdAt: Date.now(),
     lastPlayedAt: Date.now(),
     totalPlayTime: 0,
+    tutorialCompleted: false,
   };
 }
 
@@ -309,6 +310,16 @@ class StateManagerClass {
     this._state.settings = { ...this._state.settings, ...settings };
     this.queueSave();
     EventBus.emit('settings:changed', settings);
+  }
+
+  completeTutorial(): void {
+    this._state.player.tutorialCompleted = true;
+    this.saveSync();
+    EventBus.emit('tutorial:completed');
+  }
+
+  isTutorialCompleted(): boolean {
+    return this._state.player.tutorialCompleted;
   }
 }
 

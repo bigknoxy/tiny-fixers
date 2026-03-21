@@ -164,6 +164,7 @@ export interface PlayerState {
   createdAt: number;
   lastPlayedAt: number;
   totalPlayTime: number;
+  tutorialCompleted: boolean;
 }
 
 export interface ProgressState {

@@ -4,16 +4,26 @@ import { UI, ANIMATIONS } from '@/config/game.config';
 import { LEVELS } from '@/data/levels';
 import { StateManager } from '@/core/StateManager';
 import { AudioManager } from '@/systems/AudioManager';
+import { Effects } from '@/systems/Effects';
 import { getTypeColor } from '@/utils/puzzle';
+
+interface LevelSelectData {
+  showWelcome?: boolean;
+}
 
 export class LevelSelectScene extends Phaser.Scene {
   private scrollContainer!: Phaser.GameObjects.Container;
   private scrollY: number = 0;
   private maxScrollY: number = 0;
   private lastPointerY: number = 0;
+  private showWelcome: boolean = false;
 
   constructor() {
     super({ key: 'LevelSelectScene' });
+  }
+
+  init(data: LevelSelectData): void {
+    this.showWelcome = data.showWelcome || false;
   }
 
   create(): void {
@@ -24,16 +34,14 @@ export class LevelSelectScene extends Phaser.Scene {
 
     console.log(`LevelSelectScene create: ${width}x${height}, centerX=${centerX}, safeTop=${safeTop}`);
 
-    // Background
     this.createBackground(width, height);
-    
-    // Header
     this.createHeader(centerX, safeTop);
-    
-    // Level grid
     this.createLevelGrid(centerX, safeTop + 100, safeBottom - safeTop - 140);
-
     this.setupScrolling();
+
+    if (this.showWelcome) {
+      this.showWelcomeMessage(centerX, height);
+    }
   }
   
   private createBackground(width: number, height: number): void {
@@ -125,20 +133,37 @@ export class LevelSelectScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     container.add([bg, arrow]);
-    container.setSize(44, 44);
-    container.setInteractive({ useHandCursor: true });
+    
+    container.setInteractive(
+      new Phaser.Geom.Circle(0, 0, 22),
+      Phaser.Geom.Circle.Contains
+    );
 
     container.on('pointerover', () => {
+      bg.setFillStyle(COLORS.WARM_WHITE, 1);
       this.tweens.add({ targets: container, scale: 1.1, duration: 100 });
     });
     
     container.on('pointerout', () => {
+      bg.setFillStyle(COLORS.WARM_WHITE, 0.9);
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
 
+    container.on('pointerdown', () => {
+      this.tweens.add({ targets: container, scale: 0.95, duration: 50 });
+    });
+
     container.on('pointerup', () => {
-      AudioManager.playSound('click');
-      this.scene.start('HomeScene');
+      this.tweens.add({ 
+        targets: container, 
+        scale: 1, 
+        duration: 100,
+        ease: 'Back.out',
+        onComplete: () => {
+          AudioManager.playSound('click');
+          this.scene.start('HomeScene');
+        }
+      });
     });
 
     return container;
@@ -313,5 +338,52 @@ export class LevelSelectScene extends Phaser.Scene {
     this.input.on('pointerup', () => {
       hasMoved = false;
     });
+  }
+
+  private showWelcomeMessage(x: number, height: number): void {
+    const overlay = this.add.rectangle(x, height / 2, 390, height, 0x000000, 0.4);
+    
+    const panel = this.add.container(x, height / 2);
+    
+    const panelBg = this.add.rectangle(0, 0, 320, 200, COLORS.WARM_WHITE);
+    panelBg.setStrokeStyle(3, COLORS.SAGE, 1);
+    
+    const title = this.add.text(0, -60, '🎉 Welcome!', {
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
+      fontSize: '32px',
+      fontStyle: 'bold',
+      color: colorToHex(COLORS.SAGE),
+    }).setOrigin(0.5);
+    
+    const message = this.add.text(0, -10, 'You completed the tutorial!\nSelect a level to start playing.', {
+      fontFamily: UI.FONT_FAMILY_BODY,
+      fontSize: '18px',
+      color: colorToHex(COLORS.CHARCOAL),
+      align: 'center',
+    }).setOrigin(0.5);
+    
+    const okBtn = this.add.container(0, 60);
+    const btnBg = this.add.rectangle(0, 0, 180, 50, COLORS.SAGE);
+    btnBg.setStrokeStyle(2, 0xFFFFFF, 0.5);
+    const btnLabel = this.add.text(0, 0, 'Let\'s Go!', {
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
+      fontSize: '20px',
+      fontStyle: 'bold',
+      color: '#FFFFFF',
+    }).setOrigin(0.5);
+    okBtn.add([btnBg, btnLabel]);
+    okBtn.setSize(180, 50);
+    okBtn.setInteractive({ useHandCursor: true });
+    
+    okBtn.on('pointerup', () => {
+      AudioManager.playSound('click');
+      overlay.destroy();
+      panel.destroy();
+    });
+    
+    panel.add([panelBg, title, message, okBtn]);
+    
+    Effects.popIn(panel);
+    AudioManager.playSound('success');
   }
 }

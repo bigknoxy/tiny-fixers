@@ -142,11 +142,9 @@ export class ResultsScene extends Phaser.Scene {
   private createRewardsPanel(x: number, y: number): void {
     const container = this.add.container(x, y);
     
-    // Panel background
     const panelBg = this.add.rectangle(0, 0, 320, 140, COLORS.WARM_WHITE);
     panelBg.setStrokeStyle(3, 0xFFFFFF, 1);
     
-    // Time
     const timeLabel = this.add.text(-120, -40, 'Time', {
       fontFamily: UI.FONT_FAMILY_BODY,
       fontSize: '14px',
@@ -160,7 +158,6 @@ export class ResultsScene extends Phaser.Scene {
       color: colorToHex(COLORS.CHARCOAL),
     }).setOrigin(1, 0.5);
 
-    // Coins
     const coinIcon = this.add.image(-110, 0, 'coin').setScale(0.9);
     const coinsValue = this.add.text(120, 0, `+${this.resultsData.coins}`, {
       fontFamily: UI.FONT_FAMILY_DISPLAY,
@@ -171,7 +168,6 @@ export class ResultsScene extends Phaser.Scene {
 
     container.add([panelBg, timeLabel, timeValue, coinIcon, coinsValue]);
 
-    // Materials
     if (this.resultsData.materials && this.resultsData.materials.length > 0) {
       const matLabel = this.add.text(-120, 40, 'Materials', {
         fontFamily: UI.FONT_FAMILY_BODY,
@@ -189,7 +185,6 @@ export class ResultsScene extends Phaser.Scene {
       container.add([matLabel, matValue]);
     }
 
-    // Animate in
     container.setAlpha(0);
     container.y += 30;
     this.tweens.add({
@@ -199,6 +194,11 @@ export class ResultsScene extends Phaser.Scene {
       duration: 500,
       delay: 800,
       ease: ANIMATIONS.SMOOTH_EASE,
+      onComplete: () => {
+        if (this.resultsData.success && this.resultsData.coins > 0) {
+          Effects.coinPopup(x + 60, y, this.resultsData.coins);
+        }
+      },
     });
   }
 

@@ -7,6 +7,7 @@ import { GameScene } from '@/scenes/GameScene';
 import { ResultsScene } from '@/scenes/ResultsScene';
 import { HubScene } from '@/scenes/HubScene';
 import { SettingsScene } from '@/scenes/SettingsScene';
+import { TutorialScene } from '@/scenes/TutorialScene';
 
 class TinyFixersGame {
   private game: Phaser.Game;
@@ -22,6 +23,7 @@ class TinyFixersGame {
         ResultsScene,
         HubScene,
         SettingsScene,
+        TutorialScene,
       ],
     };
 

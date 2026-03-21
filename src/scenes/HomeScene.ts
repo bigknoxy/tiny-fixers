@@ -300,15 +300,14 @@ export class HomeScene extends Phaser.Scene {
     }).setOrigin(0.5);
     
     container.add([bg, icon]);
-    container.setSize(48, 48);
-    container.setInteractive({ useHandCursor: true });
     
-    container.on('pointerup', () => {
-      AudioManager.playSound('click');
-      this.scene.start('SettingsScene');
-    });
+    container.setInteractive(
+      new Phaser.Geom.Circle(0, 0, 24),
+      Phaser.Geom.Circle.Contains
+    );
     
     container.on('pointerover', () => {
+      bg.setFillStyle(COLORS.WARM_WHITE, 1);
       this.tweens.add({
         targets: container,
         scale: 1.1,
@@ -317,10 +316,28 @@ export class HomeScene extends Phaser.Scene {
     });
     
     container.on('pointerout', () => {
+      bg.setFillStyle(COLORS.WARM_WHITE, 0.8);
       this.tweens.add({
         targets: container,
         scale: 1,
         duration: 150,
+      });
+    });
+
+    container.on('pointerdown', () => {
+      this.tweens.add({ targets: container, scale: 0.95, duration: 50 });
+    });
+    
+    container.on('pointerup', () => {
+      this.tweens.add({ 
+        targets: container, 
+        scale: 1, 
+        duration: 100,
+        ease: 'Back.out',
+        onComplete: () => {
+          AudioManager.playSound('click');
+          this.scene.start('SettingsScene');
+        }
       });
     });
   }

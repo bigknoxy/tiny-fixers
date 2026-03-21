@@ -190,6 +190,52 @@ class EffectsClass {
       });
     }
   }
+
+  coinPopup(x: number, y: number, amount: number): void {
+    if (!this.scene) return;
+
+    const text = this.scene.add.text(x, y, `+${amount}`, {
+      fontFamily: 'Fredoka',
+      fontSize: '28px',
+      fontStyle: 'bold',
+      color: '#F4A261',
+    }).setOrigin(0.5);
+    
+    text.setStroke('#FFFFFF', 3);
+    text.setShadow(0, 2, '#000000', 0, true, false);
+
+    this.scene.tweens.add({
+      targets: text,
+      y: y - 60,
+      alpha: 0,
+      scale: 1.2,
+      duration: 800,
+      ease: 'Back.out',
+      onComplete: () => text.destroy(),
+    });
+  }
+
+  scorePopup(x: number, y: number, text: string, color: number = COLORS.SAGE): void {
+    if (!this.scene) return;
+
+    const label = this.scene.add.text(x, y, text, {
+      fontFamily: 'Fredoka',
+      fontSize: '24px',
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+    
+    label.setTint(color);
+    label.setStroke('#FFFFFF', 2);
+
+    this.scene.tweens.add({
+      targets: label,
+      y: y - 40,
+      alpha: 0,
+      duration: 600,
+      ease: 'Quad.out',
+      onComplete: () => label.destroy(),
+    });
+  }
 }
 
 export const Effects = new EffectsClass();

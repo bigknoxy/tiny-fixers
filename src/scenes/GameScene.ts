@@ -159,19 +159,34 @@ export class GameScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     container.add([bg, icon]);
-    container.setSize(44, 44);
-    container.setInteractive({ useHandCursor: true });
+    
+    container.setInteractive(
+      new Phaser.Geom.Circle(0, 0, 22),
+      Phaser.Geom.Circle.Contains
+    );
 
     container.on('pointerover', () => {
+      bg.setFillStyle(COLORS.WARM_WHITE, 1);
       this.tweens.add({ targets: container, scale: 1.1, duration: 100 });
     });
     
     container.on('pointerout', () => {
+      bg.setFillStyle(COLORS.WARM_WHITE, 0.9);
       this.tweens.add({ targets: container, scale: 1, duration: 100 });
     });
 
+    container.on('pointerdown', () => {
+      this.tweens.add({ targets: container, scale: 0.95, duration: 50 });
+    });
+
     container.on('pointerup', () => {
-      this.togglePause();
+      this.tweens.add({ 
+        targets: container, 
+        scale: 1, 
+        duration: 100,
+        ease: 'Back.out',
+        onComplete: () => this.togglePause()
+      });
     });
   }
 

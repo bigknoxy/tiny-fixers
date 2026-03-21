@@ -172,7 +172,7 @@ export const LEVELS: LevelData[] = [
   // SORT LEVELS (1-10)
   createSortLevel(
     'sort_01',
-    'Red & Blue',
+    'First Sort',
     'Sort the colored balls into matching bins',
     1,
     [
@@ -182,11 +182,9 @@ export const LEVELS: LevelData[] = [
     [
       { type: 'red', color: COLORS.RED },
       { type: 'blue', color: COLORS.BLUE },
-      { type: 'red', color: COLORS.RED },
-      { type: 'blue', color: COLORS.BLUE },
     ],
-    45,
-    10
+    60,
+    15
   ),
   createSortLevel(
     'sort_02',
@@ -203,11 +201,9 @@ export const LEVELS: LevelData[] = [
       { type: 'blue', color: COLORS.BLUE },
       { type: 'yellow', color: COLORS.YELLOW },
       { type: 'red', color: COLORS.RED },
-      { type: 'blue', color: COLORS.BLUE },
-      { type: 'yellow', color: COLORS.YELLOW },
     ],
-    50,
-    12
+    55,
+    15
   ),
   createSortLevel(
     'sort_03',
