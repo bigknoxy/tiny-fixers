@@ -11,13 +11,18 @@ import {
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
 
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 function migrateState(state: unknown, version: number): GameState {
-  if (version >= CURRENT_VERSION) {
-    return state as GameState;
+  const savedState = state as GameState;
+  
+  if (version < 2) {
+    if (!savedState.progress.unlockedWorlds) {
+      savedState.progress.unlockedWorlds = ['world_sort'];
+    }
   }
-  return state as GameState;
+  
+  return savedState;
 }
 
 function generateId(): string {
@@ -248,13 +253,17 @@ class StateManagerClass {
   }
 
   isWorldUnlocked(worldId: string, requiredStars: number): boolean {
-    if (this._state.progress.unlockedWorlds.includes(worldId)) {
+    const unlockedWorlds = this._state.progress.unlockedWorlds || [];
+    if (unlockedWorlds.includes(worldId)) {
       return true;
     }
     return this._state.progress.totalStars >= requiredStars;
   }
 
   unlockWorld(worldId: string): void {
+    if (!this._state.progress.unlockedWorlds) {
+      this._state.progress.unlockedWorlds = [];
+    }
     if (!this._state.progress.unlockedWorlds.includes(worldId)) {
       this._state.progress.unlockedWorlds.push(worldId);
       this.queueSave();
