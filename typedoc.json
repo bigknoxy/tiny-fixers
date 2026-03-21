@@ -1,0 +1,11 @@
+{
+  "entryPoints": ["src/main.ts"],
+  "out": "docs",
+  "plugin": ["none"],
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeExternals": true,
+  "readme": "none",
+  "githubPages": false,
+  "cleanOutputDir": true
+}

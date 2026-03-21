@@ -21,8 +21,10 @@ interface GameEventMap {
 type EventCallback<K extends keyof GameEventMap> = (data: GameEventMap[K]) => void;
 
 class EventBusClass {
-  private listeners: Map<string, Set<Function>> = new Map();
-  private sceneListeners: Map<string, Set<{ event: string; callback: Function }>> = new Map();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private listeners: Map<string, Set<(...args: any[]) => void>> = new Map();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private sceneListeners: Map<string, Set<{ event: string; callback: (...args: any[]) => void }>> = new Map();
 
   on<K extends keyof GameEventMap>(event: K, callback: EventCallback<K>): void {
     if (!this.listeners.has(event)) {

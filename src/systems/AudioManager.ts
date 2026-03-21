@@ -32,7 +32,7 @@ class AudioManagerClass {
           this._musicVolume = settings.musicVolume ?? 0.7;
           this._sfxVolume = settings.sfxVolume ?? 1.0;
         } catch {
-          
+          // Invalid JSON, use defaults
         }
       }
     }
