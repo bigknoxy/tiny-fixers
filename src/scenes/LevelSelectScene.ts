@@ -262,6 +262,7 @@ export class LevelSelectScene extends Phaser.Scene {
       
       unlockBtn.on('pointerup', () => {
         StateManager.unlockWorld(world.id);
+        StateManager.saveSync();
         AudioManager.playSound('success');
         Effects.confetti(this.scale.width / 2, y, 20);
         this.scene.restart();
@@ -370,7 +371,8 @@ export class LevelSelectScene extends Phaser.Scene {
     
     container.add([shadow, bg, colorBar]);
     
-    const levelNum = this.add.text(0, -6, `${index + 1}`, {
+    const globalIndex = LEVELS.findIndex(l => l.id === level.id);
+    const levelNum = this.add.text(0, -6, `${globalIndex + 1}`, {
       fontFamily: UI.FONT_FAMILY_DISPLAY,
       fontSize: '26px',
       fontStyle: 'bold',

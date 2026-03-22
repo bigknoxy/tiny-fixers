@@ -113,10 +113,13 @@ export class BootScene extends Phaser.Scene {
       this.load.audio(key, url);
     });
     
-    this.load.once('complete', () => {
+    const cleanup = () => {
       this.blobUrls.forEach(url => URL.revokeObjectURL(url));
       this.blobUrls = [];
-    });
+    };
+    
+    this.load.once('complete', cleanup);
+    this.load.once('loaderror', cleanup);
     
     this.load.start();
   }

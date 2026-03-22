@@ -22,6 +22,10 @@ function migrateState(state: unknown, version: number): GameState {
     }
   }
   
+  if (!savedState.progress.unlockedWorlds) {
+    savedState.progress.unlockedWorlds = ['world_sort'];
+  }
+  
   return savedState;
 }
 
