@@ -1,4 +1,4 @@
-import { LevelData, PuzzleType, MaterialType, SortConfig, UntangleConfig, PackConfig } from '@/config/types';
+import { LevelData, PuzzleType, MaterialType, SortConfig, UntangleConfig, PackConfig, WorldData } from '@/config/types';
 import { COLORS } from '@/config/colors';
 
 function createSortLevel(
@@ -682,4 +682,72 @@ export function getNextLevel(currentId: string): LevelData | undefined {
     return LEVELS[index + 1];
   }
   return undefined;
+}
+
+export const WORLDS: WorldData[] = [
+  {
+    id: 'world_sort',
+    name: 'Sorting Station',
+    description: 'Sort colorful items into matching bins',
+    color: COLORS.SORT_PRIMARY,
+    icon: '📦',
+    levelIds: ['sort_01', 'sort_02', 'sort_03', 'sort_04', 'sort_05', 'sort_06', 'sort_07', 'sort_08', 'sort_09', 'sort_10'],
+    requiredStars: 0,
+  },
+  {
+    id: 'world_untangle',
+    name: 'Tangle Town',
+    description: 'Separate messy piles of objects',
+    color: COLORS.UNTANGLE_PRIMARY,
+    icon: '🔮',
+    levelIds: ['untangle_01', 'untangle_02', 'untangle_03', 'untangle_04', 'untangle_05', 'untangle_06', 'untangle_07', 'untangle_08', 'untangle_09', 'untangle_10'],
+    requiredStars: 15,
+  },
+  {
+    id: 'world_pack',
+    name: 'Packing Palace',
+    description: 'Fit items perfectly into containers',
+    color: COLORS.PACK_PRIMARY,
+    icon: '🎁',
+    levelIds: ['pack_21', 'pack_22', 'pack_23', 'pack_24', 'pack_25', 'pack_26', 'pack_27', 'pack_28', 'pack_29', 'pack_30'],
+    requiredStars: 35,
+  },
+];
+
+export function getWorldById(id: string): WorldData | undefined {
+  return WORLDS.find(world => world.id === id);
+}
+
+export function getWorldForLevel(levelId: string): WorldData | undefined {
+  return WORLDS.find(world => world.levelIds.includes(levelId));
+}
+
+export function getLevelsInWorld(worldId: string): LevelData[] {
+  const world = getWorldById(worldId);
+  if (!world) return [];
+  return world.levelIds.map(id => getLevelById(id)!).filter(Boolean);
+}
+
+export function getWorldStars(worldId: string, completedLevels: Record<string, { stars: number }>): number {
+  return getWorldProgress(worldId, completedLevels).stars;
+}
+
+export function getWorldProgress(worldId: string, completedLevels: Record<string, { stars: number; completedAt?: number | null }>): { completed: number; total: number; stars: number } {
+  const world = getWorldById(worldId);
+  if (!world) return { completed: 0, total: 0, stars: 0 };
+  
+  let completed = 0;
+  let stars = 0;
+  
+  for (const levelId of world.levelIds) {
+    const progress = completedLevels[levelId];
+    if (progress?.stars) {
+      stars += progress.stars;
+    }
+    if (progress?.completedAt) {
+      completed++;
+    }
+  }
+  
+  return { completed, total: world.levelIds.length, stars };
 }

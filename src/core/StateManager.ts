@@ -12,13 +12,22 @@ import {
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
 
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 function migrateState(state: unknown, version: number): GameState {
-  if (version >= CURRENT_VERSION) {
-    return state as GameState;
+  const savedState = state as GameState;
+  
+  if (version < 2) {
+    if (!savedState.progress.unlockedWorlds) {
+      savedState.progress.unlockedWorlds = ['world_sort'];
+    }
   }
-  return state as GameState;
+  
+  if (!savedState.progress.unlockedWorlds) {
+    savedState.progress.unlockedWorlds = ['world_sort'];
+  }
+  
+  return savedState;
 }
 
 function generateId(): string {
@@ -48,6 +57,7 @@ function createDefaultProgress(): ProgressState {
     unlockedPuzzles: ['sort_01', 'sort_02', 'sort_03'],
     unlockedCharacters: ['helper_01'],
     unlockedDecorations: [],
+    unlockedWorlds: ['world_sort'],
   };
 }
 
@@ -246,6 +256,31 @@ class StateManagerClass {
       stars: progress?.stars || 0,
       completed: !!progress?.completedAt,
     };
+  }
+
+  isWorldUnlocked(worldId: string, requiredStars: number): boolean {
+    const unlockedWorlds = this._state.progress.unlockedWorlds || [];
+    if (unlockedWorlds.includes(worldId)) {
+      return true;
+    }
+    return this._state.progress.totalStars >= requiredStars;
+  }
+
+  unlockWorld(worldId: string): void {
+    if (!this._state.progress.unlockedWorlds) {
+      this._state.progress.unlockedWorlds = [];
+    }
+    if (!this._state.progress.unlockedWorlds.includes(worldId)) {
+      this._state.progress.unlockedWorlds.push(worldId);
+      this.queueSave();
+      EventBus.emit('world:unlocked', { worldId });
+    }
+  }
+
+  getWorldStars(_worldId: string, levelIds: string[]): number {
+    return levelIds.reduce((total, levelId) => {
+      return total + (this._state.progress.completedLevels[levelId]?.stars || 0);
+    }, 0);
   }
 
   upgradeHub(locationId: string): boolean {

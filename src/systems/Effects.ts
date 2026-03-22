@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { COLORS } from '@/config/colors';
-import { ANIMATIONS } from '@/config/game.config';
+import { COLORS, colorToHex } from '@/config/colors';
+import { UI, ANIMATIONS } from '@/config/game.config';
 
 class EffectsClass {
   private scene: Phaser.Scene | null = null;
@@ -195,10 +195,10 @@ class EffectsClass {
     if (!this.scene) return;
 
     const text = this.scene.add.text(x, y, `+${amount}`, {
-      fontFamily: 'Fredoka',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       fontSize: '28px',
       fontStyle: 'bold',
-      color: '#F4A261',
+      color: colorToHex(COLORS.MUSTARD),
     }).setOrigin(0.5);
     
     text.setStroke('#FFFFFF', 3);
@@ -219,7 +219,7 @@ class EffectsClass {
     if (!this.scene) return;
 
     const label = this.scene.add.text(x, y, text, {
-      fontFamily: 'Fredoka',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       fontSize: '24px',
       fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -234,6 +234,88 @@ class EffectsClass {
       duration: 600,
       ease: 'Quad.out',
       onComplete: () => label.destroy(),
+    });
+  }
+
+  pulse(target: Phaser.GameObjects.GameObject, scale: number = 1.05, duration: number = 200): void {
+    if (!this.scene) return;
+
+    this.scene.tweens.add({
+      targets: target,
+      scaleX: scale,
+      scaleY: scale,
+      duration: duration / 2,
+      yoyo: true,
+      ease: 'Sine.out',
+    });
+  }
+
+  ripple(x: number, y: number, color: number = COLORS.CORAL): void {
+    if (!this.scene) return;
+
+    const circle = this.scene.add.circle(x, y, 10, color, 0.3);
+    this.activeParticles.add(circle);
+
+    this.scene.tweens.add({
+      targets: circle,
+      scaleX: 4,
+      scaleY: 4,
+      alpha: 0,
+      duration: 400,
+      ease: 'Quad.out',
+      onComplete: () => {
+        this.activeParticles.delete(circle);
+        circle.destroy();
+      },
+    });
+  }
+
+  sparkle(x: number, y: number, count: number = 3): void {
+    if (!this.scene) return;
+
+    for (let i = 0; i < count; i++) {
+      const star = this.scene.add.star(
+        x + (Math.random() - 0.5) * 30,
+        y + (Math.random() - 0.5) * 30,
+        4,
+        2,
+        5,
+        COLORS.MUSTARD,
+        0.8
+      );
+      this.activeParticles.add(star);
+
+      this.scene.tweens.add({
+        targets: star,
+        alpha: 0,
+        scale: 0,
+        rotation: Math.PI,
+        duration: 400,
+        delay: i * 50,
+        ease: 'Quad.out',
+        onComplete: () => {
+          this.activeParticles.delete(star);
+          star.destroy();
+        },
+      });
+    }
+  }
+
+  bounce(target: Phaser.GameObjects.GameObject, height: number = 10): void {
+    if (!this.scene) return;
+
+    const obj = target as unknown as Phaser.GameObjects.Components.Transform;
+    const originalY = obj.y;
+
+    this.scene.tweens.add({
+      targets: target,
+      y: originalY - height,
+      duration: 150,
+      ease: 'Quad.out',
+      yoyo: true,
+      onComplete: () => {
+        obj.y = originalY;
+      },
     });
   }
 }

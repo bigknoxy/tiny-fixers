@@ -345,7 +345,7 @@ export class TutorialScene extends Phaser.Scene {
       AudioManager.playSound('click');
       InputManager.vibrate(20);
       this.time.delayedCall(100, () => {
-        this.scene.start('HomeScene');
+        this.scene.start('LevelSelectScene', { showWelcome: true });
       });
     });
 
