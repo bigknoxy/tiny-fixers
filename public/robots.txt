@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bigknoxy.github.io/tiny-fixers/sitemap.xml

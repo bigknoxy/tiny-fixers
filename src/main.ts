@@ -45,4 +45,10 @@ class TinyFixersGame {
 
 window.addEventListener('load', () => {
   new TinyFixersGame();
+  
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
+      console.warn('Service Worker registration failed:', error);
+    });
+  }
 });

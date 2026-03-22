@@ -14,9 +14,10 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "canvas": "^3.2.2",
     "typescript": "^5.3.3",
-    "vite": "^5.0.12",
-    "vite-plugin-pwa": "^0.17.4",
+    "vite": "5.3.6",
+    "vite-plugin-pwa": "0.19.0",
     "workbox-window": "^7.0.0"
   }
 }
