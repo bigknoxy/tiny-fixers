@@ -32,7 +32,7 @@ export class LevelSelectScene extends Phaser.Scene {
     const safeTop = UI.SAFE_AREA_TOP + 20;
     const safeBottom = height - UI.SAFE_AREA_BOTTOM;
 
-    console.log(`LevelSelectScene create: ${width}x${height}, centerX=${centerX}, safeTop=${safeTop}`);
+    console.warn(`LevelSelectScene create: ${width}x${height}, centerX=${centerX}, safeTop=${safeTop}`);
 
     this.createBackground(width, height);
     this.createHeader(centerX, safeTop);
@@ -204,7 +204,7 @@ export class LevelSelectScene extends Phaser.Scene {
     const progress = StateManager.getLevelProgress(level.id);
     const isCompleted = progress.completed;
     
-    console.log(`Level ${index + 1}: pos=(${x}, ${y}), unlocked=${isUnlocked}, id=${level.id}`);
+    console.warn(`Level ${index + 1}: pos=(${x}, ${y}), unlocked=${isUnlocked}, id=${level.id}`);
     
     // Get puzzle type color
     const typeColor = getTypeColor(level.type);
@@ -247,10 +247,10 @@ export class LevelSelectScene extends Phaser.Scene {
       container.setSize(size, size);
       container.setInteractive({ useHandCursor: true });
       
-      console.log(`Level ${index + 1} interactive area: size=${size}, hitArea=(${x},${y})`);
+      console.warn(`Level ${index + 1} interactive area: size=${size}, hitArea=(${x},${y})`);
 
       container.on('pointerover', () => {
-        console.log(`Level ${index + 1} pointerover`);
+        console.warn(`Level ${index + 1} pointerover`);
         this.tweens.add({
           targets: container,
           scale: 1.08,
@@ -269,7 +269,7 @@ export class LevelSelectScene extends Phaser.Scene {
       });
 
       container.on('pointerup', () => {
-        console.log(`Level ${index + 1} clicked, levelId: ${level.id}`);
+        console.warn(`Level ${index + 1} clicked, levelId: ${level.id}`);
         AudioManager.playSound('click');
         this.scene.start('GameScene', { levelId: level.id });
       });
