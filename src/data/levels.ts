@@ -729,11 +729,7 @@ export function getLevelsInWorld(worldId: string): LevelData[] {
 }
 
 export function getWorldStars(worldId: string, completedLevels: Record<string, { stars: number }>): number {
-  const world = getWorldById(worldId);
-  if (!world) return 0;
-  return world.levelIds.reduce((total, levelId) => {
-    return total + (completedLevels[levelId]?.stars || 0);
-  }, 0);
+  return getWorldProgress(worldId, completedLevels).stars;
 }
 
 export function getWorldProgress(worldId: string, completedLevels: Record<string, { stars: number; completedAt?: number | null }>): { completed: number; total: number; stars: number } {

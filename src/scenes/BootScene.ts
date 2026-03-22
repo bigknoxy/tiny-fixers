@@ -3,11 +3,13 @@ import { StateManager } from '@/core/StateManager';
 import { AudioManager } from '@/systems/AudioManager';
 import { InputManager } from '@/systems/InputManager';
 import { Effects } from '@/systems/Effects';
+import { SoundGenerator } from '@/systems/SoundGenerator';
 import { COLORS } from '@/config/colors';
 
 export class BootScene extends Phaser.Scene {
   private loadingBar: HTMLElement | null = null;
   private loadingText: HTMLElement | null = null;
+  private blobUrls: string[] = [];
 
   constructor() {
     super({ key: 'BootScene' });
@@ -95,6 +97,28 @@ export class BootScene extends Phaser.Scene {
     this.createBackgroundPattern('bg_pattern');
     
     graphics.destroy();
+    
+    // Generate audio sounds
+    this.createSounds();
+  }
+  
+  private createSounds(): void {
+    const soundKeys = ['click', 'success', 'failure', 'snap', 'pickup', 'star'];
+    
+    soundKeys.forEach(key => {
+      const blob = SoundGenerator.createWavBlob(key);
+      const url = URL.createObjectURL(blob);
+      this.blobUrls.push(url);
+      
+      this.load.audio(key, url);
+    });
+    
+    this.load.once('complete', () => {
+      this.blobUrls.forEach(url => URL.revokeObjectURL(url));
+      this.blobUrls = [];
+    });
+    
+    this.load.start();
   }
   
   private createRoundedButton(key: string, width: number, height: number, color: number): void {
