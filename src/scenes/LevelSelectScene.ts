@@ -6,6 +6,8 @@ import { StateManager } from '@/core/StateManager';
 import { AudioManager } from '@/systems/AudioManager';
 import { Effects } from '@/systems/Effects';
 import { getTypeColor } from '@/utils/puzzle';
+import { TutorialModal } from '@/systems/TutorialModal';
+import { isFirstLevelOfPuzzleType, getPuzzleTypeByFirstLevel } from '@/data/puzzleTutorials';
 
 interface LevelSelectData {
   showWelcome?: boolean;
@@ -271,7 +273,18 @@ export class LevelSelectScene extends Phaser.Scene {
       container.on('pointerup', () => {
         console.warn(`Level ${index + 1} clicked, levelId: ${level.id}`);
         AudioManager.playSound('click');
-        this.scene.start('GameScene', { levelId: level.id });
+        
+        const isFirstOfPuzzleType = isFirstLevelOfPuzzleType(level.id);
+        const puzzleType = getPuzzleTypeByFirstLevel(level.id);
+        
+        if (isFirstOfPuzzleType && puzzleType && !StateManager.isPuzzleTypeTutorialSeen(puzzleType)) {
+          TutorialModal.show(this, puzzleType, () => {
+            StateManager.markPuzzleTypeTutorialSeen(puzzleType);
+            this.scene.start('GameScene', { levelId: level.id });
+          });
+        } else {
+          this.scene.start('GameScene', { levelId: level.id });
+        }
       });
     }
 
