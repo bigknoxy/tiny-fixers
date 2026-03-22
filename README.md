@@ -1,5 +1,7 @@
 # Tiny Fixers
 
+🎮 **[Play Now!](https://bigknoxy.github.io/tiny-fixers/)**
+
 A cozy mobile puzzle game where you help quirky characters solve bite-sized problems. Built with TypeScript, Phaser 3, and Vite.
 
 ## Game Overview

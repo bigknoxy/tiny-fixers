@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MaterialType } from '@/config/types';
+import { MaterialType, PuzzleType } from '@/config/types';
 
 interface GameEventMap {
   'level:complete': { levelId: string; stars: number; time: number };
@@ -15,6 +15,7 @@ interface GameEventMap {
   'settings:changed': Record<string, unknown>;
   'audio:muted': { muted: boolean };
   'tutorial:completed': void;
+  'tutorial:puzzleTypeSeen': { type: PuzzleType };
   'coins:changed': { amount: number; total: number };
   'world:unlocked': { worldId: string };
 }
@@ -22,8 +23,10 @@ interface GameEventMap {
 type EventCallback<K extends keyof GameEventMap> = (data: GameEventMap[K]) => void;
 
 class EventBusClass {
-  private listeners: Map<string, Set<Function>> = new Map();
-  private sceneListeners: Map<string, Set<{ event: string; callback: Function }>> = new Map();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private listeners: Map<string, Set<(...args: any[]) => void>> = new Map();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private sceneListeners: Map<string, Set<{ event: string; callback: (...args: any[]) => void }>> = new Map();
 
   on<K extends keyof GameEventMap>(event: K, callback: EventCallback<K>): void {
     if (!this.listeners.has(event)) {

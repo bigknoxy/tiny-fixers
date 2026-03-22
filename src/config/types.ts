@@ -175,6 +175,7 @@ export interface PlayerState {
   lastPlayedAt: number;
   totalPlayTime: number;
   tutorialCompleted: boolean;
+  puzzleTypeTutorialsSeen?: Partial<Record<PuzzleType, boolean>>;
 }
 
 export interface ProgressState {

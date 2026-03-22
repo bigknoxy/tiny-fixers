@@ -38,20 +38,47 @@ export class SortPuzzle extends BasePuzzle {
   }
 
   private createBins(bins: SortBin[]): void {
-    bins.forEach((binData) => {
+    const sceneWidth = this.scene.scale.width;
+    const margin = 12;
+    const availableWidth = sceneWidth - margin * 2;
+    const originalBinWidth = bins[0].size.x;
+    const binHeight = bins[0].size.y;
+    const binY = bins[0].position.y;
+    const minSpacing = 6;
+
+    let spacing = 20;
+    let binWidth = originalBinWidth;
+    let totalWidth = bins.length * binWidth + (bins.length - 1) * spacing;
+
+    if (totalWidth > availableWidth) {
+      spacing = minSpacing;
+      totalWidth = bins.length * binWidth + (bins.length - 1) * spacing;
+      
+      if (totalWidth > availableWidth) {
+        const scale = availableWidth / totalWidth;
+        binWidth = Math.floor(originalBinWidth * scale);
+        totalWidth = bins.length * binWidth + (bins.length - 1) * spacing;
+      }
+    }
+
+    const startX = (sceneWidth - totalWidth) / 2 + binWidth / 2;
+
+    bins.forEach((binData, i) => {
+      const finalX = startX + i * (binWidth + spacing);
+
       const bin = this.scene.add.rectangle(
-        binData.position.x,
-        binData.position.y,
-        binData.size.x,
-        binData.size.y,
+        finalX,
+        binY,
+        binWidth,
+        binHeight,
         binData.color,
         0.3
       );
       bin.setStrokeStyle(3, binData.color, 1);
-      
+
       const label = this.scene.add.text(
-        binData.position.x,
-        binData.position.y + binData.size.y / 2 + 15,
+        finalX,
+        binY + binHeight / 2 + 15,
         binData.acceptedTypes[0].toUpperCase(),
         {
           fontSize: '14px',
@@ -59,13 +86,15 @@ export class SortPuzzle extends BasePuzzle {
           fontFamily: 'Arial',
         }
       ).setOrigin(0.5);
-      
+
+      const adjustedBinData = { ...binData, position: { x: finalX, y: binY } };
+
       this.bins.push({
-        data: binData,
+        data: adjustedBinData,
         graphics: bin,
         label,
       });
-      
+
       this.container.add([bin, label]);
     });
   }

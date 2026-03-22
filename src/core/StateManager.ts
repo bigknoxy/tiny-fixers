@@ -7,6 +7,7 @@ import {
   SettingsState,
   DailyState,
   MaterialType,
+  PuzzleType,
 } from '@/config/types';
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
@@ -40,6 +41,7 @@ function createDefaultPlayer(): PlayerState {
     lastPlayedAt: Date.now(),
     totalPlayTime: 0,
     tutorialCompleted: false,
+    puzzleTypeTutorialsSeen: {},
   };
 }
 
@@ -355,6 +357,19 @@ class StateManagerClass {
 
   isTutorialCompleted(): boolean {
     return this._state.player.tutorialCompleted;
+  }
+
+  isPuzzleTypeTutorialSeen(type: PuzzleType): boolean {
+    return this._state.player.puzzleTypeTutorialsSeen?.[type] ?? false;
+  }
+
+  markPuzzleTypeTutorialSeen(type: PuzzleType): void {
+    if (!this._state.player.puzzleTypeTutorialsSeen) {
+      this._state.player.puzzleTypeTutorialsSeen = {};
+    }
+    this._state.player.puzzleTypeTutorialsSeen[type] = true;
+    this.saveSync();
+    EventBus.emit('tutorial:puzzleTypeSeen', { type });
   }
 }
 
