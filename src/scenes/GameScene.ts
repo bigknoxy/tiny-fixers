@@ -36,7 +36,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   init(data: GameSceneData): void {
-    console.log('GameScene init called with data:', data);
+    console.warn('GameScene init called with data:', data);
     const levelData = getLevelById(data.levelId);
     if (!levelData) {
       console.error(`Level not found: ${data.levelId}`);
@@ -48,7 +48,7 @@ export class GameScene extends Phaser.Scene {
     this.isDaily = data.isDaily || false;
     this.isPaused = false;
     this.isComplete = false;
-    console.log(`GameScene initialized with level: ${levelData.name}`);
+    console.warn(`GameScene initialized with level: ${levelData.name}`);
   }
 
   create(): void {
