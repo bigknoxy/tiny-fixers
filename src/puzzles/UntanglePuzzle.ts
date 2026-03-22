@@ -15,8 +15,7 @@ interface ObjectData {
 export class UntanglePuzzle extends BasePuzzle {
   private objects: ObjectData[] = [];
   private separationThreshold: number = 5;
-  private draggedObject: ObjectData | null = null;
-  private needsOverlapCheck: boolean = true;
+  private hasStartedOverlapping: boolean = false;
 
   constructor(scene: Phaser.Scene, level: LevelData) {
     super(scene, level);
@@ -27,8 +26,16 @@ export class UntanglePuzzle extends BasePuzzle {
     this.separationThreshold = config.separationThreshold;
     
     this.createObjects(config.objects);
-    this.checkOverlaps();
+    this.checkInitialOverlap();
     this.startTimer();
+  }
+  
+  private checkInitialOverlap(): void {
+    this.checkOverlaps();
+    
+    if (!this.hasStartedOverlapping) {
+      console.warn('Level starts with non-overlapping objects - this may be a level design issue');
+    }
   }
 
   private createObjects(objects: UntangleObject[]): void {
@@ -67,7 +74,7 @@ export class UntanglePuzzle extends BasePuzzle {
             objData.size,
             objData.color
           );
-          this.setupShapeDrag(shape, objData);
+          this.setupShapeDrag(shape);
           break;
         case 'star':
           shape = this.scene.add.star(
@@ -78,7 +85,7 @@ export class UntanglePuzzle extends BasePuzzle {
             objData.size,
             objData.color
           );
-          this.setupShapeDrag(shape, objData);
+          this.setupShapeDrag(shape);
           break;
         default:
           shape = this.createDraggableCircle(
@@ -106,10 +113,10 @@ export class UntanglePuzzle extends BasePuzzle {
     });
   }
 
-  private setupShapeDrag(shape: Phaser.GameObjects.Shape, objData: UntangleObject): void {
+  private setupShapeDrag(shape: Phaser.GameObjects.Shape): void {
     shape.setInteractive({ useHandCursor: true, draggable: true });
     this.scene.input.setDraggable(shape);
-    
+
     shape.on('dragstart', () => {
       this.scene.children.bringToTop(shape);
       this.scene.tweens.add({
@@ -120,17 +127,11 @@ export class UntanglePuzzle extends BasePuzzle {
       InputManager.vibrate(10);
       AudioManager.playSound('pickup');
       this.totalMoves++;
-      
-      const objEntry = this.objects.find(o => o.data.id === objData.id);
-      if (objEntry) {
-        this.draggedObject = objEntry;
-      }
     });
 
     shape.on('drag', (_pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       shape.x = dragX;
       shape.y = dragY;
-      this.needsOverlapCheck = true;
     });
 
     shape.on('dragend', () => {
@@ -139,16 +140,11 @@ export class UntanglePuzzle extends BasePuzzle {
         scale: 1,
         duration: 100,
       });
-      this.draggedObject = null;
-      this.needsOverlapCheck = true;
     });
   }
 
   update(_delta: number): void {
-    if (this.needsOverlapCheck || this.draggedObject) {
-      this.checkOverlaps();
-      this.needsOverlapCheck = false;
-    }
+    this.checkOverlaps();
   }
 
   private checkOverlaps(): void {
@@ -186,7 +182,11 @@ export class UntanglePuzzle extends BasePuzzle {
       }
     }
     
-    if (!anyOverlapping && !this.isComplete) {
+    if (anyOverlapping) {
+      this.hasStartedOverlapping = true;
+    }
+    
+    if (!anyOverlapping && !this.isComplete && this.hasStartedOverlapping) {
       this.isComplete = true;
       this.stopTimer();
       this.onWin();
