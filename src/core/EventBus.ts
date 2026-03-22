@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MaterialType } from '@/config/types';
+import { MaterialType, PuzzleType } from '@/config/types';
 
 interface GameEventMap {
   'level:complete': { levelId: string; stars: number; time: number };
@@ -15,6 +15,7 @@ interface GameEventMap {
   'settings:changed': Record<string, unknown>;
   'audio:muted': { muted: boolean };
   'tutorial:completed': void;
+  'tutorial:puzzleTypeSeen': { type: PuzzleType };
   'coins:changed': { amount: number; total: number };
 }
 
