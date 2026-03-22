@@ -135,6 +135,72 @@ After setup, verify:
 4. GitHub Pages deploys successfully
 5. App is accessible at `https://<user>.github.io/<repo>/`
 
+### GitHub Pages Deployment Checklist
+
+**CRITICAL**: If deploying to a subpath (e.g., `github.io/repo-name/`), you MUST configure the base path or assets will 404.
+
+#### Required Configuration
+
+1. **vite.config.ts** - Add `base` property:
+   ```typescript
+   export default defineConfig({
+     base: '/repo-name/',  // e.g., '/tiny-fixers/'
+     // ... rest of config
+   });
+   ```
+
+2. **public/manifest.json** - Update all paths:
+   ```json
+   {
+     "start_url": "/repo-name/",
+     "scope": "/repo-name/",
+     "icons": [
+       { "src": "/repo-name/assets/icons/icon-192.png", ... }
+     ]
+   }
+   ```
+
+3. **public/sw.js** - Update all cache paths:
+   ```javascript
+   const ASSETS_TO_CACHE = [
+     '/repo-name/',
+     '/repo-name/index.html',
+     // ... other assets with /repo-name/ prefix
+   ];
+   ```
+
+4. **src/main.ts** - Update service worker path:
+   ```typescript
+   navigator.serviceWorker.register('/repo-name/sw.js');
+   ```
+
+#### Verification Steps
+
+After each release, verify the deployed app works:
+
+```bash
+# 1. Check that the built HTML has correct asset paths
+curl -s https://<user>.github.io/<repo>/ | grep -E 'src=|href='
+
+# Expected: All paths should include /repo-name/
+# Example: src="/tiny-fixers/assets/index-xxx.js"
+
+# 2. Check that JS bundle is accessible
+curl -sI https://<user>.github.io/<repo>/assets/index-xxx.js
+
+# Expected: HTTP/2 200
+
+# 3. Run visual inspection to verify game loads
+node .opencode/skills/visual-game-inspector/scripts/capture-playwright.mjs https://<user>.github.io/<repo>/
+```
+
+#### Symptoms of Missing Base Path
+
+- Page loads but stuck on loading screen
+- Console shows 404 errors for `/assets/index-xxx.js`
+- Phaser never initializes
+- Service worker registration fails with 404
+
 ## Troubleshooting
 
 **Release fails with "protected branch" error:**
@@ -148,6 +214,13 @@ After setup, verify:
 **Pages not deploying:**
 - Ensure Pages is enabled with `build_type: workflow`
 - Check deploy job permissions in release.yml
+
+**App stuck on loading screen after deployment:**
+- Check if `base: '/repo-name/'` is set in vite.config.ts
+- Verify all paths in manifest.json include base path
+- Verify all paths in sw.js include base path
+- Check console for 404 errors on JS/CSS assets
+- Use visual-game-inspector skill to diagnose
 
 ## Files to create
 
