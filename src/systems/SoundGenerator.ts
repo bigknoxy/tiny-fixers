@@ -1,19 +1,26 @@
 class SoundGeneratorClass {
   private audioContext: AudioContext | null = null;
+  private fallbackSampleRate: number = 44100;
 
-  private getContext(): AudioContext {
+  private getContext(): AudioContext | null {
     if (!this.audioContext) {
-      this.audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      try {
+        this.audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      } catch (e) {
+        console.warn('AudioContext not available, using fallback sample rate');
+        return null;
+      }
     }
     return this.audioContext;
   }
 
   generateSound(type: string): ArrayBuffer {
     const ctx = this.getContext();
-    const sampleRate = ctx.sampleRate;
+    const sampleRate = ctx?.sampleRate || this.fallbackSampleRate;
     const duration = this.getDuration(type);
     const numSamples = Math.floor(sampleRate * duration);
-    const buffer = ctx.createBuffer(1, numSamples, sampleRate);
+    
+    const buffer = ctx ? ctx.createBuffer(1, numSamples, sampleRate) : this.createFallbackBuffer(numSamples);
     const data = buffer.getChannelData(0);
 
     switch (type) {
@@ -52,6 +59,17 @@ class SoundGeneratorClass {
       case 'star': return 0.2;
       default: return 0.1;
     }
+  }
+
+  private createFallbackBuffer(numSamples: number): AudioBuffer {
+    const buffer = {
+      length: numSamples,
+      duration: numSamples / this.fallbackSampleRate,
+      sampleRate: this.fallbackSampleRate,
+      numberOfChannels: 1,
+      getChannelData: () => new Float32Array(numSamples),
+    } as unknown as AudioBuffer;
+    return buffer;
   }
 
   private generateClick(data: Float32Array, sampleRate: number): void {

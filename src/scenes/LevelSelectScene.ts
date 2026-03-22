@@ -1,16 +1,16 @@
 import Phaser from 'phaser';
 import { COLORS, colorToHex } from '@/config/colors';
 import { UI, ANIMATIONS } from '@/config/game.config';
-import { LEVELS } from '@/data/levels';
+import { LEVELS, WORLDS, getLevelsInWorld, getWorldProgress } from '@/data/levels';
 import { StateManager } from '@/core/StateManager';
 import { AudioManager } from '@/systems/AudioManager';
 import { Effects } from '@/systems/Effects';
 import { getTypeColor } from '@/utils/puzzle';
-import { TutorialModal } from '@/systems/TutorialModal';
-import { isFirstLevelOfPuzzleType, getPuzzleTypeByFirstLevel } from '@/data/puzzleTutorials';
+import { WorldData } from '@/config/types';
 
 interface LevelSelectData {
   showWelcome?: boolean;
+  worldId?: string;
 }
 
 export class LevelSelectScene extends Phaser.Scene {
@@ -19,6 +19,9 @@ export class LevelSelectScene extends Phaser.Scene {
   private maxScrollY: number = 0;
   private lastPointerY: number = 0;
   private showWelcome: boolean = false;
+  private currentWorldId: string | null = null;
+  private headerTitle!: Phaser.GameObjects.Text;
+  private backButtonText!: Phaser.GameObjects.Text;
 
   constructor() {
     super({ key: 'LevelSelectScene' });
@@ -26,6 +29,7 @@ export class LevelSelectScene extends Phaser.Scene {
 
   init(data: LevelSelectData): void {
     this.showWelcome = data.showWelcome || false;
+    this.currentWorldId = data.worldId || null;
   }
 
   create(): void {
@@ -34,12 +38,15 @@ export class LevelSelectScene extends Phaser.Scene {
     const safeTop = UI.SAFE_AREA_TOP + 20;
     const safeBottom = height - UI.SAFE_AREA_BOTTOM;
 
-    console.warn(`LevelSelectScene create: ${width}x${height}, centerX=${centerX}, safeTop=${safeTop}`);
-
     this.createBackground(width, height);
     this.createHeader(centerX, safeTop);
-    this.createLevelGrid(centerX, safeTop + 100, safeBottom - safeTop - 140);
-    this.setupScrolling();
+
+    if (this.currentWorldId) {
+      this.createLevelGrid(centerX, safeTop + 100, safeBottom - safeTop - 140);
+      this.setupScrolling();
+    } else {
+      this.createWorldSelect(centerX, safeTop + 100, safeBottom - safeTop - 140);
+    }
 
     if (this.showWelcome) {
       this.showWelcomeMessage(centerX, height);
@@ -52,7 +59,6 @@ export class LevelSelectScene extends Phaser.Scene {
     const pattern = this.add.tileSprite(width / 2, height / 2, width, height, 'bg_pattern');
     pattern.setAlpha(0.4);
     
-    // Top curve
     const topDeco = this.add.graphics();
     topDeco.fillStyle(COLORS.CORAL, 0.15);
     topDeco.beginPath();
@@ -68,18 +74,15 @@ export class LevelSelectScene extends Phaser.Scene {
   private createHeader(x: number, y: number): void {
     const container = this.add.container(x, y);
     
-    // Back button
     const backBtn = this.createBackButton(-150, 0);
     
-    // Title
-    const title = this.add.text(0, 0, 'Select Level', {
+    this.headerTitle = this.add.text(0, 0, this.currentWorldId ? 'Levels' : 'Worlds', {
       fontFamily: UI.FONT_FAMILY_DISPLAY,
       fontSize: '32px',
       fontStyle: 'bold',
       color: colorToHex(COLORS.CHARCOAL),
     }).setOrigin(0.5);
     
-    // Stars display
     const starsPanel = this.add.container(130, 0);
     const starsBg = this.add.rectangle(0, 0, 70, 36, COLORS.WARM_WHITE, 0.9);
     starsBg.setStrokeStyle(2, 0xFFFFFF, 1);
@@ -93,10 +96,11 @@ export class LevelSelectScene extends Phaser.Scene {
     }).setOrigin(0.5);
     
     starsPanel.add([starsBg, starIcon, starsText]);
-    container.add([backBtn, title, starsPanel]);
+    container.add([backBtn, this.headerTitle, starsPanel]);
     
-    // Legend for puzzle types
-    this.createLegend(x, y + 50);
+    if (!this.currentWorldId) {
+      this.createLegend(x, y + 50);
+    }
   }
   
   private createLegend(x: number, y: number): void {
@@ -128,13 +132,13 @@ export class LevelSelectScene extends Phaser.Scene {
     const bg = this.add.circle(0, 0, 22, COLORS.WARM_WHITE, 0.9);
     bg.setStrokeStyle(2, 0xFFFFFF, 1);
     
-    const arrow = this.add.text(0, 0, '←', {
+    this.backButtonText = this.add.text(0, 0, '←', {
       fontSize: '24px',
       fontFamily: UI.FONT_FAMILY_BODY,
       color: colorToHex(COLORS.CHARCOAL),
     }).setOrigin(0.5);
 
-    container.add([bg, arrow]);
+    container.add([bg, this.backButtonText]);
     
     container.setInteractive(
       new Phaser.Geom.Circle(0, 0, 22),
@@ -163,7 +167,11 @@ export class LevelSelectScene extends Phaser.Scene {
         ease: 'Back.out',
         onComplete: () => {
           AudioManager.playSound('click');
-          this.scene.start('HomeScene');
+          if (this.currentWorldId) {
+            this.scene.start('LevelSelectScene');
+          } else {
+            this.scene.start('HomeScene');
+          }
         }
       });
     });
@@ -171,7 +179,152 @@ export class LevelSelectScene extends Phaser.Scene {
     return container;
   }
 
+  private createWorldSelect(x: number, startY: number, height: number): void {
+    this.scrollContainer = this.add.container(x, startY);
+
+    WORLDS.forEach((world, index) => {
+      const itemY = index * 140;
+      this.createWorldCard(0, itemY, world, index);
+    });
+
+    const totalHeight = WORLDS.length * 140;
+    this.maxScrollY = Math.max(0, totalHeight - height);
+    this.setupScrolling();
+  }
+
+  private createWorldCard(x: number, y: number, world: WorldData, index: number): void {
+    const container = this.add.container(x, y);
+    const cardWidth = 340;
+    const cardHeight = 120;
+    
+    const progress = getWorldProgress(world.id, StateManager.state.progress.completedLevels);
+    const isUnlocked = StateManager.isWorldUnlocked(world.id, world.requiredStars);
+    const totalStars = StateManager.state.progress.totalStars;
+    const canUnlock = totalStars >= world.requiredStars;
+
+    const shadow = this.add.rectangle(0, 4, cardWidth, cardHeight, 0x000000, 0.1);
+    
+    const bg = this.add.rectangle(0, 0, cardWidth, cardHeight, isUnlocked ? COLORS.WARM_WHITE : 0xE8E8E8);
+    bg.setStrokeStyle(3, isUnlocked ? world.color : COLORS.SOFT_GRAY, isUnlocked ? 1 : 0.5);
+
+    const iconBg = this.add.circle(-cardWidth / 2 + 50, 0, 30, world.color, 0.2);
+    const icon = this.add.text(-cardWidth / 2 + 50, 0, world.icon, {
+      fontSize: '32px',
+    }).setOrigin(0.5);
+
+    const name = this.add.text(-cardWidth / 2 + 95, -25, world.name, {
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
+      fontSize: '22px',
+      fontStyle: 'bold',
+      color: isUnlocked ? colorToHex(COLORS.CHARCOAL) : colorToHex(COLORS.SOFT_GRAY),
+    }).setOrigin(0, 0.5);
+
+    const desc = this.add.text(-cardWidth / 2 + 95, 5, world.description, {
+      fontFamily: UI.FONT_FAMILY_BODY,
+      fontSize: '13px',
+      color: colorToHex(COLORS.GRAPHITE),
+    }).setOrigin(0, 0.5).setAlpha(0.8);
+
+    container.add([shadow, bg, iconBg, icon, name, desc]);
+
+    if (isUnlocked) {
+      const progressBg = this.add.rectangle(-cardWidth / 2 + 95, 35, 150, 10, COLORS.SOFT_GRAY, 0.3);
+      const progressFillWidth = (progress.completed / progress.total) * 150;
+      const progressFill = this.add.rectangle(
+        -cardWidth / 2 + 95,
+        35,
+        progressFillWidth,
+        8,
+        world.color
+      ).setOrigin(0, 0.5);
+      
+      const starsText = this.add.text(cardWidth / 2 - 20, 35, `${progress.stars}⭐`, {
+        fontFamily: UI.FONT_FAMILY_BODY,
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: colorToHex(COLORS.MUSTARD),
+      }).setOrigin(1, 0.5);
+
+      container.add([progressBg, progressFill, starsText]);
+    } else if (canUnlock) {
+      const unlockBtn = this.add.container(cardWidth / 2 - 60, 0);
+      const unlockBg = this.add.rectangle(0, 0, 80, 36, COLORS.SAGE);
+      unlockBg.setStrokeStyle(2, 0xFFFFFF, 0.5);
+      const unlockLabel = this.add.text(0, 0, 'Unlock!', {
+        fontFamily: UI.FONT_FAMILY_DISPLAY,
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#FFFFFF',
+      }).setOrigin(0.5);
+      unlockBtn.add([unlockBg, unlockLabel]);
+      unlockBtn.setSize(80, 36);
+      unlockBtn.setInteractive({ useHandCursor: true });
+      
+      unlockBtn.on('pointerup', () => {
+        StateManager.unlockWorld(world.id);
+        StateManager.saveSync();
+        AudioManager.playSound('success');
+        Effects.confetti(this.scale.width / 2, y, 20);
+        this.scene.restart();
+      });
+      
+      container.add(unlockBtn);
+    } else {
+      const lockText = this.add.text(cardWidth / 2 - 20, 0, `🔒 ${world.requiredStars}⭐`, {
+        fontFamily: UI.FONT_FAMILY_BODY,
+        fontSize: '16px',
+        color: colorToHex(COLORS.SOFT_GRAY),
+      }).setOrigin(1, 0.5);
+      container.add(lockText);
+    }
+
+    if (isUnlocked) {
+      container.setSize(cardWidth, cardHeight);
+      container.setInteractive({ useHandCursor: true });
+
+      container.on('pointerover', () => {
+        this.tweens.add({
+          targets: container,
+          scale: 1.02,
+          duration: 150,
+          ease: ANIMATIONS.SMOOTH_EASE,
+        });
+      });
+
+      container.on('pointerout', () => {
+        this.tweens.add({
+          targets: container,
+          scale: 1,
+          duration: 150,
+          ease: ANIMATIONS.SMOOTH_EASE,
+        });
+      });
+
+      container.on('pointerup', () => {
+        AudioManager.playSound('click');
+        this.scene.start('LevelSelectScene', { worldId: world.id });
+      });
+    }
+
+    this.scrollContainer.add(container);
+
+    container.setAlpha(0);
+    container.y += 30;
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      y: y,
+      duration: 400,
+      delay: index * 100,
+      ease: ANIMATIONS.SMOOTH_EASE,
+    });
+  }
+
   private createLevelGrid(x: number, startY: number, height: number): void {
+    const world = WORLDS.find(w => w.id === this.currentWorldId);
+    if (!world) return;
+
+    const levels = getLevelsInWorld(world.id);
     const itemSize = 72;
     const padding = 12;
     const columns = 4;
@@ -180,7 +333,8 @@ export class LevelSelectScene extends Phaser.Scene {
 
     this.scrollContainer = this.add.container(x, startY);
 
-    LEVELS.forEach((level, index) => {
+    levels.forEach((level, index) => {
+      if (!level) return;
       const col = index % columns;
       const row = Math.floor(index / columns);
       const itemX = startX + col * (itemSize + padding) - x;
@@ -189,7 +343,7 @@ export class LevelSelectScene extends Phaser.Scene {
       this.createLevelItem(itemX, itemY, itemSize, level, index);
     });
 
-    const totalRows = Math.ceil(LEVELS.length / columns);
+    const totalRows = Math.ceil(levels.length / columns);
     const totalHeight = totalRows * (itemSize + padding);
     this.maxScrollY = Math.max(0, totalHeight - height);
   }
@@ -206,25 +360,19 @@ export class LevelSelectScene extends Phaser.Scene {
     const progress = StateManager.getLevelProgress(level.id);
     const isCompleted = progress.completed;
     
-    console.warn(`Level ${index + 1}: pos=(${x}, ${y}), unlocked=${isUnlocked}, id=${level.id}`);
-    
-    // Get puzzle type color
     const typeColor = getTypeColor(level.type);
     
-    // Shadow
     const shadow = this.add.circle(0, 3, size / 2 - 4, 0x000000, 0.08);
     
-    // Main circle
     const bg = this.add.circle(0, 0, size / 2 - 4, isUnlocked ? COLORS.WARM_WHITE : 0xE8E8E8);
     bg.setStrokeStyle(3, isUnlocked ? typeColor : COLORS.SOFT_GRAY, isUnlocked ? 1 : 0.5);
     
-    // Top color bar
     const colorBar = this.add.rectangle(0, -size / 2 + 14, size - 16, 6, typeColor);
     
     container.add([shadow, bg, colorBar]);
     
-    // Level number
-    const levelNum = this.add.text(0, -6, `${index + 1}`, {
+    const globalIndex = LEVELS.findIndex(l => l.id === level.id);
+    const levelNum = this.add.text(0, -6, `${globalIndex + 1}`, {
       fontFamily: UI.FONT_FAMILY_DISPLAY,
       fontSize: '26px',
       fontStyle: 'bold',
@@ -233,7 +381,6 @@ export class LevelSelectScene extends Phaser.Scene {
     
     container.add(levelNum);
     
-    // Stars for completed levels
     if (isCompleted) {
       const starsContainer = this.createMiniStars(0, 16, progress.stars);
       container.add(starsContainer);
@@ -244,15 +391,11 @@ export class LevelSelectScene extends Phaser.Scene {
       container.add(lock);
     }
     
-    // Interactive
     if (isUnlocked) {
       container.setSize(size, size);
       container.setInteractive({ useHandCursor: true });
-      
-      console.warn(`Level ${index + 1} interactive area: size=${size}, hitArea=(${x},${y})`);
 
       container.on('pointerover', () => {
-        console.warn(`Level ${index + 1} pointerover`);
         this.tweens.add({
           targets: container,
           scale: 1.08,
@@ -271,26 +414,13 @@ export class LevelSelectScene extends Phaser.Scene {
       });
 
       container.on('pointerup', () => {
-        console.warn(`Level ${index + 1} clicked, levelId: ${level.id}`);
         AudioManager.playSound('click');
-        
-        const isFirstOfPuzzleType = isFirstLevelOfPuzzleType(level.id);
-        const puzzleType = getPuzzleTypeByFirstLevel(level.id);
-        
-        if (isFirstOfPuzzleType && puzzleType && !StateManager.isPuzzleTypeTutorialSeen(puzzleType)) {
-          TutorialModal.show(this, puzzleType, () => {
-            StateManager.markPuzzleTypeTutorialSeen(puzzleType);
-            this.scene.start('GameScene', { levelId: level.id });
-          });
-        } else {
-          this.scene.start('GameScene', { levelId: level.id });
-        }
+        this.scene.start('GameScene', { levelId: level.id });
       });
     }
 
     this.scrollContainer.add(container);
     
-    // Staggered entrance
     container.setAlpha(0);
     container.setScale(0.5);
     this.tweens.add({
@@ -368,7 +498,7 @@ export class LevelSelectScene extends Phaser.Scene {
       color: colorToHex(COLORS.SAGE),
     }).setOrigin(0.5);
     
-    const message = this.add.text(0, -10, 'You completed the tutorial!\nSelect a level to start playing.', {
+    const message = this.add.text(0, -10, 'You completed the tutorial!\nSelect a world to start playing.', {
       fontFamily: UI.FONT_FAMILY_BODY,
       fontSize: '18px',
       color: colorToHex(COLORS.CHARCOAL),

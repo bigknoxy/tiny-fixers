@@ -106,11 +106,14 @@ export class BootScene extends Phaser.Scene {
     const soundKeys = ['click', 'success', 'failure', 'snap', 'pickup', 'star'];
     
     soundKeys.forEach(key => {
-      const blob = SoundGenerator.createWavBlob(key);
-      const url = URL.createObjectURL(blob);
-      this.blobUrls.push(url);
-      
-      this.load.audio(key, url);
+      try {
+        const blob = SoundGenerator.createWavBlob(key);
+        const url = URL.createObjectURL(blob);
+        this.blobUrls.push(url);
+        this.load.audio(key, url);
+      } catch (e) {
+        console.warn(`Failed to create sound: ${key}`, e);
+      }
     });
     
     const cleanup = () => {
@@ -120,8 +123,6 @@ export class BootScene extends Phaser.Scene {
     
     this.load.once('complete', cleanup);
     this.load.once('loaderror', cleanup);
-    
-    this.load.start();
   }
   
   private createRoundedButton(key: string, width: number, height: number, color: number): void {
