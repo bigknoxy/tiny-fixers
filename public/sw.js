@@ -1,15 +1,15 @@
 const CACHE_NAME = 'tiny-fixers-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/privacy.html',
-  '/assets/icons/icon-192.png',
-  '/assets/icons/icon-512.png',
-  '/assets/icons/icon-maskable-192.png',
-  '/assets/icons/icon-maskable-512.png',
-  '/assets/icons/apple-touch-icon.png',
-  '/assets/icons/favicon.ico',
+  '/tiny-fixers/',
+  '/tiny-fixers/index.html',
+  '/tiny-fixers/manifest.json',
+  '/tiny-fixers/privacy.html',
+  '/tiny-fixers/assets/icons/icon-192.png',
+  '/tiny-fixers/assets/icons/icon-512.png',
+  '/tiny-fixers/assets/icons/icon-maskable-192.png',
+  '/tiny-fixers/assets/icons/icon-maskable-512.png',
+  '/tiny-fixers/assets/icons/apple-touch-icon.png',
+  '/tiny-fixers/assets/icons/favicon.ico',
 ];
 
 self.addEventListener('install', (event) => {
