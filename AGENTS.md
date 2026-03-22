@@ -115,6 +115,7 @@ Use skills for specialized tasks:
 |-------|-------------|
 | `release-automation` | Setting up CI/CD, releases, GitHub Pages, branch protection |
 | `visual-game-inspector` | Visual QA, UX review, FTUE evaluation, mobile testing |
+| `visual-qa-tools` | Terminal-based image viewing with chafa - use when you need to "see" screenshots, game renders, or any images in a headless/terminal environment |
 | `improve-game` | Game improvements with milestones and PRs |
 | `mobile-game-reviewer` | Review game design, retention, monetization |
 
@@ -122,6 +123,16 @@ Use skills for specialized tasks:
 Skills are auto-triggered by keywords in your request. To manually invoke:
 ```
 Use the [skill-name] skill to [task description]
+```
+
+### Visual QA with Chafa
+When you need to inspect images but cannot open a graphical viewer:
+```bash
+# View game screenshots
+chafa --colors=240 --size=100x50 /tmp/screenshot.png
+
+# Best for UI/game captures
+chafa --colors=240 --size=100x50 --symbols=block+border+space image.png
 ```
 
 ---
