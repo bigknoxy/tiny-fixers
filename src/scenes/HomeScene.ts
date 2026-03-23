@@ -412,9 +412,36 @@ export class HomeScene extends Phaser.Scene {
 
   private startDailyChallenge(): void {
     const today = new Date();
-    const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-    const levelIndex = seed % 30;
-    const levelId = `sort_${String(levelIndex + 1).padStart(2, '0')}`;
+    const dayOfWeek = today.getDay();
+    const dateSeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+
+    let prefix: string;
+    let levelMin: number;
+    let levelMax: number;
+
+    if (dayOfWeek === 0) {
+      const types = ['sort', 'untangle', 'pack'];
+      const typeIndex = dateSeed % 3;
+      prefix = types[typeIndex];
+      levelMin = types[typeIndex] === 'pack' ? 21 : 1;
+      levelMax = types[typeIndex] === 'pack' ? 30 : 10;
+    } else {
+      const typeMap: Record<number, { prefix: string; min: number; max: number }> = {
+        1: { prefix: 'sort', min: 1, max: 10 },
+        2: { prefix: 'untangle', min: 1, max: 10 },
+        3: { prefix: 'pack', min: 21, max: 30 },
+        4: { prefix: 'sort', min: 1, max: 10 },
+        5: { prefix: 'untangle', min: 1, max: 10 },
+        6: { prefix: 'pack', min: 21, max: 30 },
+      };
+      const config = typeMap[dayOfWeek];
+      prefix = config.prefix;
+      levelMin = config.min;
+      levelMax = config.max;
+    }
+
+    const levelNum = levelMin + (dateSeed % (levelMax - levelMin + 1));
+    const levelId = `${prefix}_${String(levelNum).padStart(2, '0')}`;
 
     this.scene.start('GameScene', { levelId, isDaily: true });
   }
