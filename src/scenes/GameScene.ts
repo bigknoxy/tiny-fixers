@@ -11,6 +11,8 @@ import { SortPuzzle } from '@/puzzles/SortPuzzle';
 import { UntanglePuzzle } from '@/puzzles/UntanglePuzzle';
 import { PackPuzzle } from '@/puzzles/PackPuzzle';
 import { getTypeColor } from '@/utils/puzzle';
+import { TutorialModal } from '@/systems/TutorialModal';
+import { isFirstLevelOfPuzzleType, getPuzzleTypeByFirstLevel } from '@/data/puzzleTutorials';
 
 interface GameSceneData {
   levelId: string;
@@ -68,6 +70,31 @@ export class GameScene extends Phaser.Scene {
     this.startTimer();
 
     InputManager.setEnabled(true);
+
+    // Show tutorial for first-time puzzle type
+    this.checkAndShowPuzzleTutorial();
+  }
+
+  private checkAndShowPuzzleTutorial(): void {
+    const isFirstLevel = isFirstLevelOfPuzzleType(this.level.id);
+    if (!isFirstLevel) return;
+
+    const puzzleType = getPuzzleTypeByFirstLevel(this.level.id);
+    if (!puzzleType) return;
+
+    if (StateManager.isPuzzleTypeTutorialSeen(puzzleType)) return;
+
+    this.isPaused = true;
+    
+    try {
+      TutorialModal.show(this, puzzleType, () => {
+        StateManager.markPuzzleTypeTutorialSeen(puzzleType);
+        this.isPaused = false;
+      });
+    } catch (error) {
+      console.error('Failed to show puzzle tutorial:', error);
+      this.isPaused = false;
+    }
   }
   
   private createBackground(width: number, height: number): void {
