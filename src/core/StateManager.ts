@@ -6,13 +6,14 @@ import {
   EconomyState,
   SettingsState,
   DailyState,
+  EndlessState,
   MaterialType,
   PuzzleType,
 } from '@/config/types';
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
 
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 function migrateState(state: unknown, version: number): GameState {
   const savedState = state as GameState;
@@ -23,8 +24,18 @@ function migrateState(state: unknown, version: number): GameState {
     }
   }
   
+  if (version < 3) {
+    if (!savedState.endless) {
+      savedState.endless = createDefaultEndless();
+    }
+  }
+  
   if (!savedState.progress.unlockedWorlds) {
     savedState.progress.unlockedWorlds = ['world_sort'];
+  }
+  
+  if (!savedState.endless) {
+    savedState.endless = createDefaultEndless();
   }
   
   return savedState;
@@ -93,6 +104,13 @@ function createDefaultDaily(): DailyState {
   };
 }
 
+function createDefaultEndless(): EndlessState {
+  return {
+    highScore: 0,
+    totalGamesPlayed: 0,
+  };
+}
+
 function createDefaultState(): GameState {
   return {
     version: CURRENT_VERSION,
@@ -101,6 +119,7 @@ function createDefaultState(): GameState {
     economy: createDefaultEconomy(),
     settings: createDefaultSettings(),
     daily: createDefaultDaily(),
+    endless: createDefaultEndless(),
     achievements: [],
   };
 }
@@ -370,6 +389,25 @@ class StateManagerClass {
     this._state.player.puzzleTypeTutorialsSeen[type] = true;
     this.saveSync();
     EventBus.emit('tutorial:puzzleTypeSeen', { type });
+  }
+
+  updateEndlessHighScore(score: number): boolean {
+    if (score > this._state.endless.highScore) {
+      this._state.endless.highScore = score;
+      this.queueSave();
+      EventBus.emit('endless:highscore', { score });
+      return true;
+    }
+    return false;
+  }
+
+  recordEndlessGamePlayed(score: number): boolean {
+    this._state.endless.totalGamesPlayed++;
+    return this.updateEndlessHighScore(score);
+  }
+
+  getEndlessHighScore(): number {
+    return this._state.endless.highScore;
   }
 }
 

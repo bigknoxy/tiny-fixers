@@ -169,6 +169,11 @@ export interface DailyState {
   weeklyRewardsClaimed: number[];
 }
 
+export interface EndlessState {
+  highScore: number;
+  totalGamesPlayed: number;
+}
+
 export interface PlayerState {
   id: string;
   createdAt: number;
@@ -208,6 +213,7 @@ export interface GameState {
   economy: EconomyState;
   settings: SettingsState;
   daily: DailyState;
+  endless: EndlessState;
   achievements: Achievement[];
 }
 

@@ -1,3 +1,5 @@
+declare const __APP_VERSION__: string;
+
 import Phaser from 'phaser';
 import { GAME_CONFIG } from '@/config/game.config';
 import { BootScene } from '@/scenes/BootScene';
@@ -8,6 +10,9 @@ import { ResultsScene } from '@/scenes/ResultsScene';
 import { HubScene } from '@/scenes/HubScene';
 import { SettingsScene } from '@/scenes/SettingsScene';
 import { TutorialScene } from '@/scenes/TutorialScene';
+import { EndlessScene } from '@/scenes/EndlessScene';
+
+export const APP_VERSION = __APP_VERSION__;
 
 class TinyFixersGame {
   private game: Phaser.Game;
@@ -24,6 +29,7 @@ class TinyFixersGame {
         HubScene,
         SettingsScene,
         TutorialScene,
+        EndlessScene,
       ],
     };
 
