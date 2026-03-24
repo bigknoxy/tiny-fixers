@@ -18,6 +18,7 @@ interface GameEventMap {
   'tutorial:puzzleTypeSeen': { type: PuzzleType };
   'coins:changed': { amount: number; total: number };
   'world:unlocked': { worldId: string };
+  'endless:highscore': { score: number };
 }
 
 type EventCallback<K extends keyof GameEventMap> = (data: GameEventMap[K]) => void;

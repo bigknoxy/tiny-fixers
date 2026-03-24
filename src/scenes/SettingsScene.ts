@@ -4,6 +4,7 @@ import { UI } from '@/config/game.config';
 import { StateManager } from '@/core/StateManager';
 import { AudioManager } from '@/systems/AudioManager';
 import { InputManager } from '@/systems/InputManager';
+import { APP_VERSION } from '@/main';
 
 export class SettingsScene extends Phaser.Scene {
   constructor() {
@@ -19,7 +20,8 @@ export class SettingsScene extends Phaser.Scene {
 
     this.createHeader(centerX, safeTop);
     this.createSettingsOptions(centerX, safeTop + 100);
-    this.createResetButton(centerX, height - 150);
+    this.createResetButton(centerX, height - 180);
+    this.createVersionDisplay(centerX, height - 50);
   }
 
   private createHeader(x: number, y: number): void {
@@ -305,5 +307,13 @@ export class SettingsScene extends Phaser.Scene {
       overlay.destroy();
       panel.destroy();
     });
+  }
+
+  private createVersionDisplay(x: number, y: number): void {
+    this.add.text(x, y, `v${APP_VERSION}`, {
+      fontSize: '14px',
+      fontFamily: 'Arial',
+      color: '#999999',
+    }).setOrigin(0.5);
   }
 }

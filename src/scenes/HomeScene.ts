@@ -190,8 +190,13 @@ export class HomeScene extends Phaser.Scene {
       }
     }, dailyCompleted ? COLORS.SAGE : COLORS.SKY, false);
     
+    // Endless Mode
+    this.createButton(x, startY + spacing * 2, 'Endless Mode', 200, 56, () => {
+      this.scene.start('EndlessScene');
+    }, COLORS.LAVENDER, false);
+    
     // Hub button
-    this.createButton(x, startY + spacing * 2, 'My Neighborhood', 200, 56, () => {
+    this.createButton(x, startY + spacing * 3, 'My Neighborhood', 200, 56, () => {
       this.scene.start('HubScene');
     }, COLORS.MUSTARD, false);
     

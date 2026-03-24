@@ -15,14 +15,18 @@ import { TutorialModal } from '@/systems/TutorialModal';
 import { isFirstLevelOfPuzzleType, getPuzzleTypeByFirstLevel } from '@/data/puzzleTutorials';
 
 interface GameSceneData {
-  levelId: string;
+  levelId?: string;
+  levelData?: LevelData;
   isDaily?: boolean;
+  isEndless?: boolean;
+  endlessScore?: number;
 }
 
 export class GameScene extends Phaser.Scene {
   private level!: LevelData;
   private puzzle!: BasePuzzle;
   private isDaily: boolean = false;
+  private isEndless: boolean = false;
 
   private timeRemaining!: number;
   private timerText!: Phaser.GameObjects.Text;
@@ -39,18 +43,28 @@ export class GameScene extends Phaser.Scene {
 
   init(data: GameSceneData): void {
     console.warn('GameScene init called with data:', data);
-    const levelData = getLevelById(data.levelId);
-    if (!levelData) {
-      console.error(`Level not found: ${data.levelId}`);
+    
+    if (data.levelData) {
+      this.level = data.levelData;
+    } else if (data.levelId) {
+      const levelData = getLevelById(data.levelId);
+      if (!levelData) {
+        console.error(`Level not found: ${data.levelId}`);
+        this.scene.start('HomeScene');
+        return;
+      }
+      this.level = levelData;
+    } else {
+      console.error('No level data provided');
       this.scene.start('HomeScene');
       return;
     }
 
-    this.level = levelData;
     this.isDaily = data.isDaily || false;
+    this.isEndless = data.isEndless || false;
     this.isPaused = false;
     this.isComplete = false;
-    console.warn(`GameScene initialized with level: ${levelData.name}`);
+    console.warn(`GameScene initialized with level: ${this.level.name}`);
   }
 
   create(): void {
@@ -331,11 +345,19 @@ export class GameScene extends Phaser.Scene {
     });
 
     const restartBtn = this.createMenuButton(0, 35, 'Restart', COLORS.SKY, () => {
-      this.scene.restart({ levelId: this.level.id, isDaily: this.isDaily });
+      if (this.isEndless) {
+        this.scene.start('EndlessScene');
+      } else {
+        this.scene.restart({ levelId: this.level.id, isDaily: this.isDaily });
+      }
     });
 
     const quitBtn = this.createMenuButton(0, 95, 'Quit', COLORS.CORAL, () => {
-      this.scene.start('LevelSelectScene');
+      if (this.isEndless) {
+        this.scene.start('HomeScene');
+      } else {
+        this.scene.start('LevelSelectScene');
+      }
     });
 
     menu.add([panelBg, title, resumeBtn, restartBtn, quitBtn]);
@@ -394,6 +416,25 @@ export class GameScene extends Phaser.Scene {
 
   private showResults(success: boolean): void {
     const score = this.puzzle.getScore();
+
+    if (this.isEndless) {
+      const endlessScene = this.scene.get('EndlessScene') as import('./EndlessScene').EndlessScene | undefined;
+      
+      if (!endlessScene) {
+        this.scene.start('HomeScene');
+        return;
+      }
+      
+      if (success) {
+        endlessScene.handleLevelComplete(score.stars, score.time);
+      } else {
+        endlessScene.handleLevelFail();
+      }
+      
+      this.scene.wake('EndlessScene');
+      this.scene.stop();
+      return;
+    }
 
     if (success) {
       StateManager.completeLevel(this.level.id, score.stars, score.time);
