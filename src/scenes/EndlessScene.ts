@@ -117,7 +117,9 @@ export class EndlessScene extends Phaser.Scene {
       return;
     }
 
-    const tutorialLevelId = puzzleType === PuzzleType.UNTANGLE ? 'untangle_01' : 'pack_21';
+    const tutorialLevelId = puzzleType === PuzzleType.SORT ? 'sort_01'
+      : puzzleType === PuzzleType.UNTANGLE ? 'untangle_01'
+      : 'pack_21';
     const firstLevelType = getPuzzleTypeByFirstLevel(tutorialLevelId);
     
     if (firstLevelType !== puzzleType) {

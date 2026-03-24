@@ -345,11 +345,19 @@ export class GameScene extends Phaser.Scene {
     });
 
     const restartBtn = this.createMenuButton(0, 35, 'Restart', COLORS.SKY, () => {
-      this.scene.restart({ levelId: this.level.id, isDaily: this.isDaily });
+      if (this.isEndless) {
+        this.scene.start('EndlessScene');
+      } else {
+        this.scene.restart({ levelId: this.level.id, isDaily: this.isDaily });
+      }
     });
 
     const quitBtn = this.createMenuButton(0, 95, 'Quit', COLORS.CORAL, () => {
-      this.scene.start('LevelSelectScene');
+      if (this.isEndless) {
+        this.scene.start('HomeScene');
+      } else {
+        this.scene.start('LevelSelectScene');
+      }
     });
 
     menu.add([panelBg, title, resumeBtn, restartBtn, quitBtn]);
@@ -410,7 +418,12 @@ export class GameScene extends Phaser.Scene {
     const score = this.puzzle.getScore();
 
     if (this.isEndless) {
-      const endlessScene = this.scene.get('EndlessScene') as import('./EndlessScene').EndlessScene;
+      const endlessScene = this.scene.get('EndlessScene') as import('./EndlessScene').EndlessScene | undefined;
+      
+      if (!endlessScene) {
+        this.scene.start('HomeScene');
+        return;
+      }
       
       if (success) {
         endlessScene.handleLevelComplete(score.stars, score.time);

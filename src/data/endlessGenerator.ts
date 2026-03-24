@@ -124,7 +124,7 @@ function generateUntangleLevel(
     const angle = (Math.PI * 2 * i) / objectCount;
     const baseRadius = objectCount <= 4 ? 25 : 40;
     const radius = baseRadius + random() * 30;
-    const overlapOffset = (random() - 0.5) * (50 + (6 - difficulty) * 15);
+    const overlapOffset = (random() - 0.5) * (50 + Math.max(0, 6 - difficulty) * 15);
     
     objects.push({
       id: `obj_${i}`,

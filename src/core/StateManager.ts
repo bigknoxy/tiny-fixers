@@ -30,14 +30,6 @@ function migrateState(state: unknown, version: number): GameState {
     }
   }
   
-  if (!savedState.progress.unlockedWorlds) {
-    savedState.progress.unlockedWorlds = ['world_sort'];
-  }
-  
-  if (!savedState.endless) {
-    savedState.endless = createDefaultEndless();
-  }
-  
   return savedState;
 }
 
