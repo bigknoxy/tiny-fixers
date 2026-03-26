@@ -174,6 +174,13 @@ export interface EndlessState {
   totalGamesPlayed: number;
 }
 
+export interface AchievementStats {
+  totalGamesPlayed: number;
+  perfectLevels: number;
+  totalCoinsEarned: number;
+  levelsCompletedPerType: Partial<Record<PuzzleType, number>>;
+}
+
 export interface PlayerState {
   id: string;
   createdAt: number;
@@ -215,6 +222,7 @@ export interface GameState {
   daily: DailyState;
   endless: EndlessState;
   achievements: Achievement[];
+  achievementStats: AchievementStats;
 }
 
 export interface ScoreResult {

@@ -175,9 +175,7 @@ export class HomeScene extends Phaser.Scene {
   private createButtons(x: number, startY: number): void {
     const spacing = 70;
     
-    // Play button - large and prominent
     this.createButton(x, startY, 'PLAY', 220, 64, () => {
-      console.warn('PLAY button clicked, starting LevelSelectScene');
       this.scene.start('LevelSelectScene');
     }, COLORS.CORAL, true);
     

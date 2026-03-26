@@ -43,8 +43,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   init(data: GameSceneData): void {
-    console.warn('GameScene init called with data:', data);
-    
     if (data.levelData) {
       this.level = data.levelData;
     } else if (data.levelId) {
@@ -66,7 +64,6 @@ export class GameScene extends Phaser.Scene {
     this.endlessScore = data.endlessScore || 0;
     this.isPaused = false;
     this.isComplete = false;
-    console.warn(`GameScene initialized with level: ${this.level.name}`);
   }
 
   create(): void {

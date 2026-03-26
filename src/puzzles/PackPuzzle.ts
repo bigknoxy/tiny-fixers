@@ -222,6 +222,7 @@ export class PackPuzzle extends BasePuzzle {
   }
 
   destroy(): void {
+    this.scene.tweens.killTweensOf(this.boundsGraphics);
     this.boundsGraphics.destroy();
     this.items.forEach(item => {
       item.graphics.destroy();

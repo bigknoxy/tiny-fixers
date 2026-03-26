@@ -10,19 +10,13 @@ import {
   MaterialType,
   PuzzleType,
   Achievement,
+  AchievementStats,
 } from '@/config/types';
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
 import { createInitialAchievements, ACHIEVEMENT_DEFINITIONS, AchievementDefinition } from '@/data/achievements';
 
-const CURRENT_VERSION = 4;
-
-interface AchievementStats {
-  totalGamesPlayed: number;
-  perfectLevels: number;
-  totalCoinsEarned: number;
-  levelsCompletedPerType: Record<PuzzleType, number>;
-}
+const CURRENT_VERSION = 5;
 
 function migrateState(state: unknown, version: number): GameState {
   const savedState = state as GameState;
@@ -43,8 +37,11 @@ function migrateState(state: unknown, version: number): GameState {
     if (!savedState.achievements || savedState.achievements.length === 0) {
       savedState.achievements = createInitialAchievements();
     }
-    if (!(savedState as GameState & { achievementStats?: AchievementStats }).achievementStats) {
-      (savedState as GameState & { achievementStats?: AchievementStats }).achievementStats = createDefaultAchievementStats();
+  }
+  
+  if (version < 5) {
+    if (!savedState.achievementStats) {
+      savedState.achievementStats = createDefaultAchievementStats();
     }
   }
   
@@ -52,7 +49,7 @@ function migrateState(state: unknown, version: number): GameState {
 }
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 function createDefaultPlayer(): PlayerState {
@@ -144,17 +141,16 @@ function createDefaultState(): GameState {
     daily: createDefaultDaily(),
     endless: createDefaultEndless(),
     achievements: createInitialAchievements(),
+    achievementStats: createDefaultAchievementStats(),
   };
 }
 
 class StateManagerClass {
   private _state: GameState;
-  private _achievementStats: AchievementStats;
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this._state = createDefaultState();
-    this._achievementStats = createDefaultAchievementStats();
   }
 
   get state(): GameState {
@@ -162,7 +158,7 @@ class StateManagerClass {
   }
 
   get achievementStats(): AchievementStats {
-    return this._achievementStats;
+    return this._state.achievementStats;
   }
 
   async load(): Promise<void> {
@@ -455,16 +451,19 @@ class StateManagerClass {
   }
 
   recordGamePlayed(puzzleType: PuzzleType, wasPerfect: boolean): void {
-    this._achievementStats.totalGamesPlayed++;
-    this._achievementStats.levelsCompletedPerType[puzzleType]++;
+    this._state.achievementStats.totalGamesPlayed++;
+    const currentCount = this._state.achievementStats.levelsCompletedPerType[puzzleType] ?? 0;
+    this._state.achievementStats.levelsCompletedPerType[puzzleType] = currentCount + 1;
     if (wasPerfect) {
-      this._achievementStats.perfectLevels++;
+      this._state.achievementStats.perfectLevels++;
     }
+    this.queueSave();
     this.checkAchievements();
   }
 
   recordCoinsEarned(amount: number): void {
-    this._achievementStats.totalCoinsEarned += amount;
+    this._state.achievementStats.totalCoinsEarned += amount;
+    this.queueSave();
   }
 
   private checkAchievements(): string[] {
@@ -500,17 +499,17 @@ class StateManagerClass {
         return this._state.daily.longestStreak >= value;
       
       case 'perfect_levels':
-        return this._achievementStats.perfectLevels >= value;
+        return this._state.achievementStats.perfectLevels >= value;
       
       case 'puzzle_type_master':
         if (!puzzleType) return false;
-        return this._achievementStats.levelsCompletedPerType[puzzleType] >= value;
+        return (this._state.achievementStats.levelsCompletedPerType[puzzleType] ?? 0) >= value;
       
       case 'total_games':
-        return this._achievementStats.totalGamesPlayed >= value;
+        return this._state.achievementStats.totalGamesPlayed >= value;
       
       case 'coins_earned':
-        return this._achievementStats.totalCoinsEarned >= value;
+        return this._state.achievementStats.totalCoinsEarned >= value;
       
       default:
         return false;
