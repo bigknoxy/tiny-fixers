@@ -5,6 +5,7 @@ import { StateManager } from '@/core/StateManager';
 import { AudioManager } from '@/systems/AudioManager';
 import { Effects } from '@/systems/Effects';
 import { InputManager } from '@/systems/InputManager';
+import { AchievementNotification } from '@/systems/AchievementNotification';
 
 export class HomeScene extends Phaser.Scene {
   constructor() {
@@ -16,18 +17,17 @@ export class HomeScene extends Phaser.Scene {
     const centerX = width / 2;
     const safeTop = UI.SAFE_AREA_TOP + 20;
 
-    // Gradient background
+    Effects.init(this);
+    AchievementNotification.setupListeners(this);
+
     this.createBackground(width, height);
     
-    // Decorative elements
     this.createDecorations(width, height);
     
-    // Main content
     this.createLogo(centerX, safeTop + 40);
     this.createStats(centerX, safeTop + 160);
     this.createButtons(centerX, height / 2 + 40);
     
-    // Streak display
     this.updateStreak();
   }
   
@@ -199,6 +199,13 @@ export class HomeScene extends Phaser.Scene {
     this.createButton(x, startY + spacing * 3, 'My Neighborhood', 200, 56, () => {
       this.scene.start('HubScene');
     }, COLORS.MUSTARD, false);
+    
+    // Achievements button
+    const achievementProgress = StateManager.getAchievementProgress();
+    const achievementLabel = `Achievements (${achievementProgress.unlocked}/${achievementProgress.total})`;
+    this.createButton(x, startY + spacing * 4, achievementLabel, 200, 56, () => {
+      this.scene.start('AchievementsScene');
+    }, COLORS.SAGE, false);
     
     // Settings - smaller, top right
     this.createSettingsButton(x + 150, UI.SAFE_AREA_TOP + 30);

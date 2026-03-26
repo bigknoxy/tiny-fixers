@@ -36,15 +36,17 @@ export class PackPuzzle extends BasePuzzle {
   }
 
   private createBounds(): void {
+    const boundsColor = COLORS.SKY;
+    
     this.boundsGraphics = this.scene.add.rectangle(
       this.bounds.x + this.bounds.width / 2,
       this.bounds.y + this.bounds.height / 2,
       this.bounds.width,
       this.bounds.height,
-      COLORS.WHITE,
-      0.1
+      boundsColor,
+      0.15
     );
-    this.boundsGraphics.setStrokeStyle(3, COLORS.WHITE, 0.8);
+    this.boundsGraphics.setStrokeStyle(3, boundsColor, 1);
     this.boundsGraphics.setData('isBounds', true);
     
     this.container.add(this.boundsGraphics);
@@ -55,12 +57,21 @@ export class PackPuzzle extends BasePuzzle {
       'Drop items here',
       {
         fontSize: '14px',
-        color: '#FFFFFF',
+        color: '#4A90D9',
         fontFamily: 'Arial',
+        fontStyle: 'bold',
       }
-    ).setOrigin(0.5).setAlpha(0.6);
+    ).setOrigin(0.5).setAlpha(0.8);
     
     this.container.add(label);
+    
+    this.scene.tweens.add({
+      targets: this.boundsGraphics,
+      strokeAlpha: { from: 1, to: 0.5 },
+      duration: 1000,
+      yoyo: true,
+      repeat: -1,
+    });
   }
 
   private createItems(items: PackItem[]): void {
