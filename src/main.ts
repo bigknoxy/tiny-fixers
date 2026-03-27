@@ -11,6 +11,7 @@ import { HubScene } from '@/scenes/HubScene';
 import { SettingsScene } from '@/scenes/SettingsScene';
 import { TutorialScene } from '@/scenes/TutorialScene';
 import { EndlessScene } from '@/scenes/EndlessScene';
+import { AchievementsScene } from '@/scenes/AchievementsScene';
 
 export const APP_VERSION = __APP_VERSION__;
 
@@ -30,6 +31,7 @@ class TinyFixersGame {
         SettingsScene,
         TutorialScene,
         EndlessScene,
+        AchievementsScene,
       ],
     };
 

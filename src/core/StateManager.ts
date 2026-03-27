@@ -9,11 +9,14 @@ import {
   EndlessState,
   MaterialType,
   PuzzleType,
+  Achievement,
+  AchievementStats,
 } from '@/config/types';
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
+import { createInitialAchievements, ACHIEVEMENT_DEFINITIONS, AchievementDefinition } from '@/data/achievements';
 
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 5;
 
 function migrateState(state: unknown, version: number): GameState {
   const savedState = state as GameState;
@@ -30,11 +33,23 @@ function migrateState(state: unknown, version: number): GameState {
     }
   }
   
+  if (version < 4) {
+    if (!savedState.achievements || savedState.achievements.length === 0) {
+      savedState.achievements = createInitialAchievements();
+    }
+  }
+  
+  if (version < 5) {
+    if (!savedState.achievementStats) {
+      savedState.achievementStats = createDefaultAchievementStats();
+    }
+  }
+  
   return savedState;
 }
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 function createDefaultPlayer(): PlayerState {
@@ -103,6 +118,19 @@ function createDefaultEndless(): EndlessState {
   };
 }
 
+function createDefaultAchievementStats(): AchievementStats {
+  return {
+    totalGamesPlayed: 0,
+    perfectLevels: 0,
+    totalCoinsEarned: 0,
+    levelsCompletedPerType: {
+      [PuzzleType.SORT]: 0,
+      [PuzzleType.UNTANGLE]: 0,
+      [PuzzleType.PACK]: 0,
+    },
+  };
+}
+
 function createDefaultState(): GameState {
   return {
     version: CURRENT_VERSION,
@@ -112,7 +140,8 @@ function createDefaultState(): GameState {
     settings: createDefaultSettings(),
     daily: createDefaultDaily(),
     endless: createDefaultEndless(),
-    achievements: [],
+    achievements: createInitialAchievements(),
+    achievementStats: createDefaultAchievementStats(),
   };
 }
 
@@ -126,6 +155,10 @@ class StateManagerClass {
 
   get state(): GameState {
     return this._state;
+  }
+
+  get achievementStats(): AchievementStats {
+    return this._state.achievementStats;
   }
 
   async load(): Promise<void> {
@@ -400,6 +433,100 @@ class StateManagerClass {
 
   getEndlessHighScore(): number {
     return this._state.endless.highScore;
+  }
+
+  getAchievement(id: string): Achievement | undefined {
+    return this._state.achievements.find(a => a.id === id);
+  }
+
+  getUnlockedAchievements(): Achievement[] {
+    return this._state.achievements.filter(a => a.unlocked);
+  }
+
+  getAchievementProgress(): { unlocked: number; total: number } {
+    return {
+      unlocked: this._state.achievements.filter(a => a.unlocked).length,
+      total: this._state.achievements.length,
+    };
+  }
+
+  recordGamePlayed(puzzleType: PuzzleType, wasPerfect: boolean): void {
+    this._state.achievementStats.totalGamesPlayed++;
+    const currentCount = this._state.achievementStats.levelsCompletedPerType[puzzleType] ?? 0;
+    this._state.achievementStats.levelsCompletedPerType[puzzleType] = currentCount + 1;
+    if (wasPerfect) {
+      this._state.achievementStats.perfectLevels++;
+    }
+    this.queueSave();
+    this.checkAchievements();
+  }
+
+  recordCoinsEarned(amount: number): void {
+    this._state.achievementStats.totalCoinsEarned += amount;
+    this.queueSave();
+  }
+
+  private checkAchievements(): string[] {
+    const unlocked: string[] = [];
+
+    for (const def of ACHIEVEMENT_DEFINITIONS) {
+      const existing = this.getAchievement(def.id);
+      if (!existing || existing.unlocked) continue;
+
+      if (this.checkAchievementCondition(def)) {
+        this.unlockAchievement(def.id);
+        unlocked.push(def.id);
+      }
+    }
+
+    return unlocked;
+  }
+
+  private checkAchievementCondition(def: AchievementDefinition): boolean {
+    const { type, value, puzzleType } = def.condition;
+
+    switch (type) {
+      case 'levels_completed':
+        return Object.keys(this._state.progress.completedLevels).length >= value;
+      
+      case 'stars_earned':
+        return this._state.progress.totalStars >= value;
+      
+      case 'endless_score':
+        return this._state.endless.highScore >= value;
+      
+      case 'daily_streak':
+        return this._state.daily.longestStreak >= value;
+      
+      case 'perfect_levels':
+        return this._state.achievementStats.perfectLevels >= value;
+      
+      case 'puzzle_type_master':
+        if (!puzzleType) return false;
+        return (this._state.achievementStats.levelsCompletedPerType[puzzleType] ?? 0) >= value;
+      
+      case 'total_games':
+        return this._state.achievementStats.totalGamesPlayed >= value;
+      
+      case 'coins_earned':
+        return this._state.achievementStats.totalCoinsEarned >= value;
+      
+      default:
+        return false;
+    }
+  }
+
+  private unlockAchievement(id: string): void {
+    const achievement = this._state.achievements.find(a => a.id === id);
+    if (!achievement || achievement.unlocked) return;
+
+    achievement.unlocked = true;
+    achievement.unlockedAt = Date.now();
+
+    this._state.economy.coins += achievement.reward;
+    this.queueSave();
+
+    EventBus.emit('achievement:unlocked', { achievementId: id });
   }
 }
 

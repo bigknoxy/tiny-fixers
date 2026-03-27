@@ -27,6 +27,7 @@ export class GameScene extends Phaser.Scene {
   private puzzle!: BasePuzzle;
   private isDaily: boolean = false;
   private isEndless: boolean = false;
+  private endlessScore: number = 0;
 
   private timeRemaining!: number;
   private timerText!: Phaser.GameObjects.Text;
@@ -42,8 +43,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   init(data: GameSceneData): void {
-    console.warn('GameScene init called with data:', data);
-    
     if (data.levelData) {
       this.level = data.levelData;
     } else if (data.levelId) {
@@ -62,9 +61,9 @@ export class GameScene extends Phaser.Scene {
 
     this.isDaily = data.isDaily || false;
     this.isEndless = data.isEndless || false;
+    this.endlessScore = data.endlessScore || 0;
     this.isPaused = false;
     this.isComplete = false;
-    console.warn(`GameScene initialized with level: ${this.level.name}`);
   }
 
   create(): void {
@@ -418,27 +417,30 @@ export class GameScene extends Phaser.Scene {
     const score = this.puzzle.getScore();
 
     if (this.isEndless) {
-      const endlessScene = this.scene.get('EndlessScene') as import('./EndlessScene').EndlessScene | undefined;
-      
-      if (!endlessScene) {
-        this.scene.start('HomeScene');
-        return;
-      }
+      const newScore = this.endlessScore + (success ? 1 : 0);
       
       if (success) {
-        endlessScene.handleLevelComplete(score.stars, score.time);
+        const isNewHighScore = StateManager.updateEndlessHighScore(newScore);
+        
+        if (isNewHighScore && newScore > 1) {
+          this.scene.start('EndlessScene', { score: newScore, showHighScore: true });
+          return;
+        }
+        
+        this.scene.start('EndlessScene', { score: newScore, levelCompleted: true });
       } else {
-        endlessScene.handleLevelFail();
+        this.scene.start('EndlessScene', { score: this.endlessScore, levelCompleted: false });
       }
-      
-      this.scene.wake('EndlessScene');
-      this.scene.stop();
       return;
     }
 
     if (success) {
       StateManager.completeLevel(this.level.id, score.stars, score.time);
       StateManager.addCoins(score.coins);
+      StateManager.recordCoinsEarned(score.coins);
+
+      const wasPerfect = this.puzzle.getScore().accuracy === 1;
+      StateManager.recordGamePlayed(this.level.type, wasPerfect);
 
       if (this.isDaily) {
         StateManager.completeDailyChallenge();

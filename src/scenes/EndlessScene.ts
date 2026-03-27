@@ -9,18 +9,30 @@ import { LevelData, PuzzleType } from '@/config/types';
 import { TutorialModal } from '@/systems/TutorialModal';
 import { getPuzzleTypeByFirstLevel } from '@/data/puzzleTutorials';
 
+interface EndlessSceneData {
+  score?: number;
+  levelCompleted?: boolean;
+  showHighScore?: boolean;
+}
+
 export class EndlessScene extends Phaser.Scene {
   private currentLevel: LevelData | null = null;
   private score: number = 0;
   private levelSeed: number = 0;
   private scoreLabel!: Phaser.GameObjects.Text;
+  private incomingData: EndlessSceneData = {};
 
   constructor() {
     super({ key: 'EndlessScene' });
   }
 
-  init(): void {
-    this.score = 0;
+  init(data: EndlessSceneData): void {
+    this.incomingData = data;
+    if (typeof data.score === 'number') {
+      this.score = data.score;
+    } else {
+      this.score = 0;
+    }
     this.levelSeed = Date.now();
   }
 
@@ -33,7 +45,17 @@ export class EndlessScene extends Phaser.Scene {
     Effects.init(this);
 
     this.createHeader(centerX, UI.SAFE_AREA_TOP + 30);
-    this.generateNextLevel();
+
+    this.scoreLabel.setText(`Score: ${this.score}`);
+    
+    if (this.incomingData.showHighScore) {
+      this.showHighScorePopup();
+    } else if (this.incomingData.levelCompleted === false) {
+      StateManager.recordEndlessGamePlayed(this.score);
+      this.showGameOver();
+    } else {
+      this.generateAndStartLevel();
+    }
 
     this.scale.on('resize', this.handleResize, this);
   }
@@ -93,7 +115,7 @@ export class EndlessScene extends Phaser.Scene {
     return container;
   }
 
-  private generateNextLevel(): void {
+  private generateAndStartLevel(): void {
     this.levelSeed = Date.now() + this.score;
     
     try {
@@ -141,31 +163,11 @@ export class EndlessScene extends Phaser.Scene {
   private startLevel(): void {
     if (!this.currentLevel) return;
 
-    this.scene.launch('GameScene', {
+    this.scene.start('GameScene', {
       levelData: this.currentLevel,
       isEndless: true,
       endlessScore: this.score,
     });
-
-    this.scene.sleep();
-  }
-
-  handleLevelComplete(_stars: number, _time: number): void {
-    this.score++;
-    this.scoreLabel.setText(`Score: ${this.score}`);
-
-    const isNewHighScore = StateManager.updateEndlessHighScore(this.score);
-
-    if (isNewHighScore && this.score > 1) {
-      this.showHighScorePopup();
-    } else {
-      this.generateNextLevel();
-    }
-  }
-
-  handleLevelFail(): void {
-    StateManager.recordEndlessGamePlayed(this.score);
-    this.showGameOver();
   }
 
   private showHighScorePopup(): void {
@@ -207,7 +209,7 @@ export class EndlessScene extends Phaser.Scene {
     continueBtn.on('pointerup', () => {
       overlay.destroy();
       panel.destroy();
-      this.generateNextLevel();
+      this.generateAndStartLevel();
     });
   }
 
@@ -287,7 +289,7 @@ export class EndlessScene extends Phaser.Scene {
       AudioManager.playSound('click');
       overlay.destroy();
       panel.destroy();
-      this.scene.restart();
+      this.scene.restart({ score: 0 });
     });
 
     homeBtn.on('pointerup', () => {

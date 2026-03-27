@@ -10,6 +10,7 @@ export class BootScene extends Phaser.Scene {
   private loadingBar: HTMLElement | null = null;
   private loadingText: HTMLElement | null = null;
   private blobUrls: string[] = [];
+  private stateLoaded: boolean = false;
 
   constructor() {
     super({ key: 'BootScene' });
@@ -250,6 +251,7 @@ export class BootScene extends Phaser.Scene {
     }
 
     await StateManager.load();
+    this.stateLoaded = true;
 
     AudioManager.init(this);
     InputManager.init(this);
@@ -282,7 +284,9 @@ export class BootScene extends Phaser.Scene {
   private setupVisibilityHandler(): void {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        StateManager.saveSync();
+        if (this.stateLoaded) {
+          StateManager.saveSync();
+        }
         AudioManager.pauseMusic();
       } else {
         AudioManager.resumeMusic();
@@ -291,7 +295,9 @@ export class BootScene extends Phaser.Scene {
     });
 
     window.addEventListener('beforeunload', () => {
-      StateManager.saveSync();
+      if (this.stateLoaded) {
+        StateManager.saveSync();
+      }
     });
   }
 }
