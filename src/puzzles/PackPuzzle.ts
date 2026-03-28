@@ -174,11 +174,14 @@ export class PackPuzzle extends BasePuzzle {
       ease: 'Back.out',
     });
     
-    item.setStrokeStyle(2, COLORS.SUCCESS, 1);
+    item.setStrokeStyle(3, COLORS.SUCCESS, 1);
     
-    Effects.particles(item.x, item.y, { color: itemData.color, count: 8 });
+    Effects.particles(item.x, item.y, { color: itemData.color, count: 12, speed: 180 });
+    Effects.sparkle(item.x, item.y, 2);
     AudioManager.playSound('snap');
     InputManager.vibrate(20);
+    
+    this.recordCombo(item.x, item.y);
     
     if (this.unplacedCount === 0) {
       this.isComplete = true;
@@ -198,12 +201,17 @@ export class PackPuzzle extends BasePuzzle {
   }
 
   private onWin(): void {
-    Effects.confetti(
-      this.bounds.x + this.bounds.width / 2,
-      this.bounds.y + this.bounds.height / 2,
-      15
-    );
-    AudioManager.playSound('success');
+    const centerX = this.bounds.x + this.bounds.width / 2;
+    const centerY = this.bounds.y + this.bounds.height / 2;
+    
+    Effects.confetti(centerX, centerY, 20);
+    
+    if (this.wrongMoves === 0) {
+      Effects.perfect(centerX, centerY);
+      AudioManager.playSound('perfect');
+    } else {
+      AudioManager.playSound('success');
+    }
     InputManager.vibrate(40);
   }
 

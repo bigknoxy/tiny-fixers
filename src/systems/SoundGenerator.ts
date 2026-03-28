@@ -42,6 +42,18 @@ class SoundGeneratorClass {
       case 'star':
         this.generateStar(data, sampleRate);
         break;
+      case 'combo':
+        this.generateCombo(data, sampleRate);
+        break;
+      case 'perfect':
+        this.generatePerfect(data, sampleRate);
+        break;
+      case 'tick':
+        this.generateTick(data, sampleRate);
+        break;
+      case 'whoosh':
+        this.generateWhoosh(data, sampleRate);
+        break;
       default:
         this.generateClick(data, sampleRate);
     }
@@ -57,6 +69,10 @@ class SoundGeneratorClass {
       case 'snap': return 0.1;
       case 'pickup': return 0.06;
       case 'star': return 0.2;
+      case 'combo': return 0.25;
+      case 'perfect': return 0.6;
+      case 'tick': return 0.05;
+      case 'whoosh': return 0.15;
       default: return 0.1;
     }
   }
@@ -130,6 +146,57 @@ class SoundGeneratorClass {
       const t = i / sampleRate;
       const envelope = Math.sin(t * Math.PI / 0.2) * Math.exp(-t * 5);
       data[i] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.3;
+    }
+  }
+
+  private generateCombo(data: Float32Array, sampleRate: number): void {
+    const freqs = [880, 1108.73, 1318.51];
+    const segmentLength = Math.floor(data.length / freqs.length);
+    
+    for (let seg = 0; seg < freqs.length; seg++) {
+      const freq = freqs[seg];
+      for (let i = 0; i < segmentLength; i++) {
+        const idx = seg * segmentLength + i;
+        if (idx >= data.length) break;
+        const t = i / sampleRate;
+        const envelope = Math.exp(-t * 15);
+        data[idx] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.25;
+      }
+    }
+  }
+
+  private generatePerfect(data: Float32Array, sampleRate: number): void {
+    const freqs = [523.25, 659.25, 783.99, 1046.50];
+    const segmentLength = Math.floor(data.length / freqs.length);
+    
+    for (let seg = 0; seg < freqs.length; seg++) {
+      const freq = freqs[seg];
+      for (let i = 0; i < segmentLength; i++) {
+        const idx = seg * segmentLength + i;
+        if (idx >= data.length) break;
+        const t = i / sampleRate;
+        const envelope = Math.sin(t * Math.PI / 0.15) * Math.exp(-t * 3);
+        data[idx] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.3;
+      }
+    }
+  }
+
+  private generateTick(data: Float32Array, sampleRate: number): void {
+    const freq = 1500;
+    for (let i = 0; i < data.length; i++) {
+      const t = i / sampleRate;
+      const envelope = Math.exp(-t * 100);
+      data[i] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.15;
+    }
+  }
+
+  private generateWhoosh(data: Float32Array, sampleRate: number): void {
+    for (let i = 0; i < data.length; i++) {
+      const t = i / sampleRate;
+      const noise = Math.random() * 2 - 1;
+      const envelope = Math.sin(t * Math.PI / 0.15);
+      const filter = Math.sin(2 * Math.PI * 400 * t);
+      data[i] = noise * envelope * filter * 0.1;
     }
   }
 

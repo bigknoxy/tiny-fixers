@@ -197,13 +197,21 @@ export class UntanglePuzzle extends BasePuzzle {
     this.objects.forEach(obj => {
       Effects.particles(obj.graphics.x, obj.graphics.y, {
         color: obj.data.color,
-        count: 5,
-        speed: 100,
+        count: 8,
+        speed: 150,
       });
+      Effects.sparkle(obj.graphics.x, obj.graphics.y, 2);
     });
     
-    AudioManager.playSound('success');
-    InputManager.vibrate(30);
+    if (this.wrongMoves === 0) {
+      const centerX = this.objects.reduce((sum, obj) => sum + obj.graphics.x, 0) / this.objects.length;
+      const centerY = this.objects.reduce((sum, obj) => sum + obj.graphics.y, 0) / this.objects.length;
+      Effects.perfect(centerX, centerY);
+      AudioManager.playSound('perfect');
+    } else {
+      AudioManager.playSound('success');
+    }
+    InputManager.vibrate(40);
   }
 
   checkWin(): boolean {

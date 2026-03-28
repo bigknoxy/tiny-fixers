@@ -5,6 +5,7 @@ import { UI, ANIMATIONS } from '@/config/game.config';
 class EffectsClass {
   private scene: Phaser.Scene | null = null;
   private activeParticles: Set<Phaser.GameObjects.Shape> = new Set();
+  private ambientTimer: Phaser.Time.TimerEvent | null = null;
 
   init(scene: Phaser.Scene): void {
     this.scene = scene;
@@ -317,6 +318,193 @@ class EffectsClass {
         obj.y = originalY;
       },
     });
+  }
+
+  combo(x: number, y: number, count: number): void {
+    if (!this.scene) return;
+    
+    const comboColors = [COLORS.SAGE, COLORS.SKY, COLORS.MUSTARD, COLORS.CORAL, COLORS.LAVENDER];
+    const color = comboColors[Math.min(count - 1, comboColors.length - 1)];
+    const scale = Math.min(1 + count * 0.15, 2);
+    
+    const text = this.scene.add.text(x, y, `${count}x COMBO!`, {
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
+      fontSize: `${Math.round(28 * scale)}px`,
+      fontStyle: 'bold',
+      color: colorToHex(color),
+    }).setOrigin(0.5);
+    
+    text.setStroke('#FFFFFF', 4);
+    text.setShadow(0, 4, colorToHex(color), 0, true, false);
+    text.setScale(0);
+    
+    this.scene.tweens.add({
+      targets: text,
+      scale: scale,
+      duration: 300,
+      ease: 'Back.out',
+      onComplete: () => {
+        this.scene?.tweens.add({
+          targets: text,
+          y: y - 80,
+          alpha: 0,
+          scale: scale * 1.3,
+          duration: 600,
+          delay: 200,
+          ease: 'Quad.out',
+          onComplete: () => text.destroy(),
+        });
+      },
+    });
+    
+    for (let i = 0; i < count; i++) {
+      this.scene.time.delayedCall(i * 50, () => {
+        this.particles(x + (Math.random() - 0.5) * 60, y + (Math.random() - 0.5) * 30, {
+          color,
+          count: 3,
+          speed: 100 + count * 20,
+        });
+      });
+    }
+  }
+
+  glow(target: Phaser.GameObjects.Shape, color: number = COLORS.MUSTARD, intensity: number = 1): Phaser.GameObjects.Shape | null {
+    if (!this.scene) return null;
+    
+    const glow = this.scene.add.circle(
+      target.x,
+      target.y,
+      (target.width / 2) * 1.5,
+      color,
+      0.3 * intensity
+    );
+    
+    this.activeParticles.add(glow);
+    
+    this.scene.tweens.add({
+      targets: glow,
+      alpha: { from: 0.4 * intensity, to: 0.1 },
+      scale: { from: 1, to: 1.3 },
+      duration: 400,
+      yoyo: true,
+      repeat: -1,
+    });
+    
+    return glow;
+  }
+
+  trail(x: number, y: number, color: number): void {
+    if (!this.scene) return;
+    
+    const trail = this.scene.add.circle(x, y, 8, color, 0.6);
+    this.activeParticles.add(trail);
+    
+    this.scene.tweens.add({
+      targets: trail,
+      alpha: 0,
+      scale: 0.3,
+      duration: 200,
+      ease: 'Quad.out',
+      onComplete: () => {
+        this.activeParticles.delete(trail);
+        trail.destroy();
+      },
+    });
+  }
+
+  perfect(x: number, y: number): void {
+    if (!this.scene) return;
+    
+    const text = this.scene.add.text(x, y, 'PERFECT!', {
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
+      fontSize: '48px',
+      fontStyle: 'bold',
+      color: colorToHex(COLORS.MUSTARD),
+    }).setOrigin(0.5);
+    
+    text.setStroke('#FFFFFF', 6);
+    text.setShadow(0, 6, colorToHex(COLORS.MUSTARD_DARK), 0, true, false);
+    text.setScale(0);
+    
+    this.scene.tweens.add({
+      targets: text,
+      scale: 1,
+      duration: 500,
+      ease: 'Back.out',
+      onComplete: () => {
+        this.scene?.tweens.add({
+          targets: text,
+          y: y - 50,
+          alpha: 0,
+          duration: 800,
+          ease: 'Quad.out',
+          onComplete: () => text.destroy(),
+        });
+      },
+    });
+    
+    this.confetti(x, y, 40);
+    this.shake(10, 150);
+  }
+
+  timeWarning(scene: Phaser.Scene, x: number, y: number): void {
+    const flash = scene.add.rectangle(x, y, scene.scale.width, scene.scale.height, COLORS.CORAL, 0.1);
+    
+    scene.tweens.add({
+      targets: flash,
+      alpha: 0,
+      duration: 200,
+      onComplete: () => flash.destroy(),
+    });
+  }
+
+  celebrate(x: number, y: number, intensity: number = 1): void {
+    if (!this.scene) return;
+    
+    const count = Math.round(20 * intensity);
+    this.confetti(x, y, count);
+    this.shake(8 * intensity, 100);
+    
+    for (let i = 0; i < 3; i++) {
+      this.scene.time.delayedCall(i * 150, () => {
+        this.particles(x + (Math.random() - 0.5) * 100, y + (Math.random() - 0.5) * 50, {
+          count: 10,
+          speed: 150 + intensity * 50,
+        });
+      });
+    }
+  }
+
+  snapFeedback(x: number, y: number, color: number, success: boolean = true): void {
+    if (!this.scene) return;
+    
+    if (success) {
+      this.ripple(x, y, color);
+      this.sparkle(x, y, 2);
+    } else {
+      this.shake(4, 80);
+    }
+  }
+
+  startAmbient(scene: Phaser.Scene): void {
+    this.ambientTimer = scene.time.addEvent({
+      delay: 2000,
+      callback: () => {
+        if (Math.random() > 0.7) {
+          const x = Math.random() * scene.scale.width;
+          const y = Math.random() * scene.scale.height;
+          this.sparkle(x, y, 1);
+        }
+      },
+      loop: true,
+    });
+  }
+
+  stopAmbient(): void {
+    if (this.ambientTimer) {
+      this.ambientTimer.destroy();
+      this.ambientTimer = null;
+    }
   }
 }
 

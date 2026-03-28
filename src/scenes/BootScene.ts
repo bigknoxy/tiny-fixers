@@ -104,7 +104,7 @@ export class BootScene extends Phaser.Scene {
   }
   
   private createSounds(): void {
-    const soundKeys = ['click', 'success', 'failure', 'snap', 'pickup', 'star'];
+    const soundKeys = ['click', 'success', 'failure', 'snap', 'pickup', 'star', 'combo', 'perfect', 'tick', 'whoosh'];
     
     soundKeys.forEach(key => {
       try {

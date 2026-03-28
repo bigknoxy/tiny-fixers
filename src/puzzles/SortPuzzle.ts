@@ -167,9 +167,13 @@ export class SortPuzzle extends BasePuzzle {
     
     item.disableInteractive();
     
-    Effects.particles(item.x, item.y, { color: bin.data.color, count: 8 });
+    Effects.particles(item.x, item.y, { color: bin.data.color, count: 12, speed: 200 });
+    Effects.sparkle(item.x, item.y, 3);
+    Effects.ripple(item.x, item.y, bin.data.color);
     AudioManager.playSound('snap');
     InputManager.vibrate(20);
+    
+    this.recordCombo(item.x, item.y);
     
     bin.graphics.setFillStyle(bin.data.color, 0.5);
     this.scene.time.delayedCall(150, () => {
@@ -179,13 +183,18 @@ export class SortPuzzle extends BasePuzzle {
     if (this.unplacedCount === 0) {
       this.isComplete = true;
       this.stopTimer();
+      if (this.wrongMoves === 0) {
+        Effects.perfect(item.x, item.y - 100);
+        AudioManager.playSound('perfect');
+      }
     }
   }
 
   private wrongMove(item: Phaser.GameObjects.Arc, itemData: SortItem): void {
     this.wrongMoves++;
+    this.resetCombo();
     
-    Effects.shake(5, 100);
+    Effects.shake(6, 120);
     AudioManager.playSound('failure');
     InputManager.vibrate(50);
     

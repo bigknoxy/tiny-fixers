@@ -3,6 +3,7 @@ import { LevelData, ScoreResult, SortConfig, UntangleConfig, PackConfig, Materia
 import { COLORS } from '@/config/colors';
 import { AudioManager } from '@/systems/AudioManager';
 import { InputManager } from '@/systems/InputManager';
+import { Effects } from '@/systems/Effects';
 
 export abstract class BasePuzzle {
   protected scene: Phaser.Scene;
@@ -13,6 +14,9 @@ export abstract class BasePuzzle {
   protected isComplete: boolean = false;
   protected wrongMoves: number = 0;
   protected totalMoves: number = 0;
+  protected comboCount: number = 0;
+  protected lastComboTime: number = 0;
+  protected readonly COMBO_TIMEOUT: number = 1500;
 
   constructor(scene: Phaser.Scene, level: LevelData) {
     this.scene = scene;
@@ -76,6 +80,29 @@ export abstract class BasePuzzle {
     };
   }
 
+  protected recordCombo(x: number, y: number): void {
+    const now = Date.now();
+    
+    if (now - this.lastComboTime < this.COMBO_TIMEOUT) {
+      this.comboCount++;
+    } else {
+      this.comboCount = 1;
+    }
+    
+    this.lastComboTime = now;
+    
+    if (this.comboCount >= 2) {
+      Effects.combo(x, y, this.comboCount);
+      AudioManager.playSound('combo');
+      InputManager.vibrate(20 + this.comboCount * 5);
+    }
+  }
+
+  protected resetCombo(): void {
+    this.comboCount = 0;
+    this.lastComboTime = 0;
+  }
+
   protected createDraggableObject(
     x: number,
     y: number,
@@ -109,6 +136,7 @@ export abstract class BasePuzzle {
     obj.on('drag', (_pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       obj.x = dragX;
       obj.y = dragY;
+      Effects.trail(dragX, dragY, (obj as Phaser.GameObjects.Rectangle).fillColor);
     });
 
     obj.on('dragend', () => {
@@ -153,6 +181,7 @@ export abstract class BasePuzzle {
     obj.on('drag', (_pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
       obj.x = dragX;
       obj.y = dragY;
+      Effects.trail(dragX, dragY, (obj as Phaser.GameObjects.Arc).fillColor);
     });
 
     obj.on('dragend', () => {

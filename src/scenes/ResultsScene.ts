@@ -55,7 +55,6 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   private createSuccessUI(x: number, y: number, height: number): void {
-    // Title with bounce
     const title = this.add.text(x, y + 50, 'Level Complete!', {
       fontFamily: UI.FONT_FAMILY_DISPLAY,
       fontSize: '40px',
@@ -65,13 +64,16 @@ export class ResultsScene extends Phaser.Scene {
     
     title.setShadow(0, 3, colorToHex(COLORS.SAGE_DARK), 0, true, false);
 
-    // Stars
     this.createStarsRow(x, y + 130);
 
-    // Rewards panel
     this.createRewardsPanel(x, y + 250);
 
-    // Buttons
+    if (this.resultsData.stars === 3) {
+      this.time.delayedCall(1500, () => {
+        Effects.celebrate(x, y + 100, 1.5);
+      });
+    }
+
     this.createButtons(x, height - 160);
   }
 
