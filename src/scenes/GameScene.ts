@@ -5,6 +5,7 @@ import { LevelData, PuzzleType, SortConfig, UntangleConfig, PackConfig } from '@
 import { getLevelById } from '@/data/levels';
 import { StateManager } from '@/core/StateManager';
 import { Effects } from '@/systems/Effects';
+import { AudioManager } from '@/systems/AudioManager';
 import { InputManager } from '@/systems/InputManager';
 import { BasePuzzle } from '@/puzzles/BasePuzzle';
 import { SortPuzzle } from '@/puzzles/SortPuzzle';
@@ -259,7 +260,6 @@ export class GameScene extends Phaser.Scene {
         this.timeRemaining--;
         this.timerText.setText(this.formatTime(this.timeRemaining));
 
-        // Warning state
         if (this.timeRemaining <= 10) {
           this.timerText.setColor(colorToHex(COLORS.CORAL));
           this.tweens.add({
@@ -268,6 +268,12 @@ export class GameScene extends Phaser.Scene {
             duration: 100,
             yoyo: true,
           });
+          
+          if (this.timeRemaining <= 5) {
+            Effects.timeWarning(this, this.scale.width / 2, this.scale.height / 2);
+            AudioManager.playSound('tick');
+            InputManager.vibrate(15);
+          }
         }
 
         if (this.timeRemaining <= 0) {
