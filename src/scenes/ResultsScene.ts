@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { COLORS, colorToHex } from '@/config/colors';
 import { UI, ANIMATIONS } from '@/config/game.config';
-import { MaterialType } from '@/config/types';
+import { MaterialType, DailyModifier } from '@/config/types';
 import { getNextLevel } from '@/data/levels';
+import { StateManager } from '@/core/StateManager';
 import { AudioManager } from '@/systems/AudioManager';
 import { Effects } from '@/systems/Effects';
 import { InputManager } from '@/systems/InputManager';
@@ -15,17 +16,34 @@ interface ResultsData {
   coins: number;
   materials: { type: MaterialType; amount: number }[];
   isDaily?: boolean;
+  dailyModifiers?: DailyModifier[];
+  wasPrecisionPerfect?: boolean;
 }
 
 export class ResultsScene extends Phaser.Scene {
   private resultsData!: ResultsData;
+  private sadFaceTween: Phaser.Tweens.Tween | null = null;
 
   constructor() {
     super({ key: 'ResultsScene' });
   }
 
   init(data: ResultsData): void {
+    // Safety check: if daily was already completed before this run, don't grant rewards
+    // This handles edge cases where GameScene redirect was bypassed
+    if (data.isDaily && StateManager.getTodayChallengeCompleted()) {
+      data.coins = 0;
+      data.isDaily = false; // Treat as regular level for UI purposes
+    }
     this.resultsData = data;
+  }
+
+  shutdown(): void {
+    // Clean up sad face tween
+    if (this.sadFaceTween) {
+      this.sadFaceTween.stop();
+      this.sadFaceTween = null;
+    }
   }
 
   create(): void {
@@ -55,7 +73,13 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   private createSuccessUI(x: number, y: number, height: number): void {
-    const title = this.add.text(x, y + 50, 'Level Complete!', {
+    // Daily challenge specific title
+    let titleText = 'Level Complete!';
+    if (this.resultsData.isDaily) {
+      titleText = 'Daily Challenge Complete!';
+    }
+    
+    const title = this.add.text(x, y + 50, titleText, {
       fontFamily: UI.FONT_FAMILY_DISPLAY,
       fontSize: '40px',
       fontStyle: 'bold',
@@ -64,9 +88,25 @@ export class ResultsScene extends Phaser.Scene {
     
     title.setShadow(0, 3, colorToHex(COLORS.SAGE_DARK), 0, true, false);
 
-    this.createStarsRow(x, y + 130);
+    // Show daily streak info
+    if (this.resultsData.isDaily) {
+      this.createDailyStreakPanel(x, y + 130);
+      this.createStarsRow(x, y + 200);
+      this.createRewardsPanel(x, y + 320);
 
-    this.createRewardsPanel(x, y + 250);
+      // Show perfect precision badge if applicable
+      if (this.resultsData.wasPrecisionPerfect) {
+        this.add.text(x, y + 400, '⭐ Perfect Precision!', {
+          fontFamily: UI.FONT_FAMILY_DISPLAY,
+          fontSize: '20px',
+          fontStyle: 'bold',
+          color: colorToHex(COLORS.MUSTARD),
+        }).setOrigin(0.5);
+      }
+    } else {
+      this.createStarsRow(x, y + 130);
+      this.createRewardsPanel(x, y + 250);
+    }
 
     if (this.resultsData.stars === 3) {
       this.time.delayedCall(1500, () => {
@@ -98,7 +138,7 @@ export class ResultsScene extends Phaser.Scene {
       fontSize: '64px',
     }).setOrigin(0.5);
     
-    this.tweens.add({
+    this.sadFaceTween = this.tweens.add({
       targets: sadFace,
       y: y + 190,
       duration: 1000,
@@ -108,6 +148,42 @@ export class ResultsScene extends Phaser.Scene {
     });
 
     this.createButtons(x, height - 160, true);
+  }
+
+  private createDailyStreakPanel(x: number, y: number): void {
+    const streak = StateManager.getDailyStreak();
+    
+    const panel = this.add.container(x, y);
+    
+    const bg = this.add.rectangle(0, 0, 260, 50, COLORS.CORAL, 0.15);
+    bg.setStrokeStyle(2, COLORS.CORAL);
+    
+    const flame = this.add.text(-100, 0, '🔥', {
+      fontSize: '28px',
+    }).setOrigin(0.5);
+    
+    const streakText = this.add.text(-50, -8, `${streak.current} Day Streak!`, {
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
+      fontSize: '18px',
+      fontStyle: 'bold',
+      color: colorToHex(COLORS.CORAL),
+    }).setOrigin(0, 0.5);
+    
+    const bestText = this.add.text(-50, 10, `Best: ${streak.longest} days`, {
+      fontFamily: UI.FONT_FAMILY_BODY,
+      fontSize: '12px',
+      color: colorToHex(COLORS.GRAPHITE),
+    }).setOrigin(0, 0.5);
+    
+    panel.add([bg, flame, streakText, bestText]);
+    
+    panel.setAlpha(0);
+    this.tweens.add({
+      targets: panel,
+      alpha: 1,
+      duration: 500,
+      delay: 500,
+    });
   }
 
   private createStarsRow(x: number, y: number): void {

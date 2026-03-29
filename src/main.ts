@@ -12,6 +12,7 @@ import { SettingsScene } from '@/scenes/SettingsScene';
 import { TutorialScene } from '@/scenes/TutorialScene';
 import { EndlessScene } from '@/scenes/EndlessScene';
 import { AchievementsScene } from '@/scenes/AchievementsScene';
+import { DailyChallengeScene } from '@/scenes/DailyChallengeScene';
 
 export const APP_VERSION = __APP_VERSION__;
 
@@ -32,6 +33,7 @@ class TinyFixersGame {
         TutorialScene,
         EndlessScene,
         AchievementsScene,
+        DailyChallengeScene,
       ],
     };
 

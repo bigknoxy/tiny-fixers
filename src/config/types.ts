@@ -88,6 +88,7 @@ export interface LevelData {
   config: SortConfig | UntangleConfig | PackConfig;
   rewards: RewardConfig;
   requiredStars?: number;
+  modifiers?: DailyModifier[];
 }
 
 export interface RewardConfig {
@@ -167,6 +168,9 @@ export interface DailyState {
   longestStreak: number;
   todayChallengeCompleted: boolean;
   weeklyRewardsClaimed: number[];
+  completedChallenges: DailyCompletion[];
+  totalDailyWins: number;
+  lastCompletedDate: string | null;
 }
 
 export interface EndlessState {
@@ -179,6 +183,9 @@ export interface AchievementStats {
   perfectLevels: number;
   totalCoinsEarned: number;
   levelsCompletedPerType: Partial<Record<PuzzleType, number>>;
+  dailyChallengesCompleted: number;
+  dailyStreakRecord: number;
+  dailyPerfectStreak: number;
 }
 
 export interface PlayerState {
@@ -231,4 +238,48 @@ export interface ScoreResult {
   accuracy: number;
   coins: number;
   materials: MaterialReward[];
+}
+
+// ============================================
+// DAILY CHALLENGE TYPES
+// ============================================
+
+/** Modifier types that change daily challenge behavior */
+export enum DailyModifierType {
+  SPEED_ROUND = 'speed_round',
+  PRECISION_MODE = 'precision_mode',
+  BONUS_COINS = 'bonus_coins',
+}
+
+/** Configuration for a daily challenge modifier */
+export interface DailyModifier {
+  type: DailyModifierType;
+  name: string;
+  description: string;
+  icon: string;
+  timeMultiplier?: number;
+  allowedMistakes?: number;
+  coinMultiplier?: number;
+}
+
+/** A daily challenge definition */
+export interface DailyChallenge {
+  date: string;
+  puzzleType: PuzzleType;
+  modifiers: DailyModifier[];
+  difficulty: number;
+  baseCoins: number;
+  streakBonus: number;
+  completed: boolean;
+  completionTime?: number;
+}
+
+/** Daily challenge completion record */
+export interface DailyCompletion {
+  date: string;
+  puzzleType: PuzzleType;
+  modifiers: DailyModifierType[];
+  time: number;
+  coinsEarned: number;
+  streakAtCompletion: number;
 }

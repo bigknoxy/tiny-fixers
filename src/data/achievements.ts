@@ -9,7 +9,7 @@ export interface AchievementDefinition {
   category: AchievementCategory;
   icon: string;
   condition: {
-    type: 'levels_completed' | 'stars_earned' | 'endless_score' | 'daily_streak' | 'perfect_levels' | 'speedrun' | 'puzzle_type_master' | 'coins_earned' | 'total_games';
+    type: 'levels_completed' | 'stars_earned' | 'endless_score' | 'daily_streak' | 'perfect_levels' | 'speedrun' | 'puzzle_type_master' | 'coins_earned' | 'total_games' | 'daily_challenges_completed' | 'daily_streak_record' | 'daily_precision_completed';
     value: number;
     puzzleType?: PuzzleType;
   };
@@ -55,6 +55,18 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   { id: 'enthusiast', name: 'Enthusiast', description: 'Play 50 games total', category: 'dedication', icon: '🎮', condition: { type: 'total_games', value: 50 }, reward: 100 },
   { id: 'veteran', name: 'Veteran', description: 'Play 100 games total', category: 'dedication', icon: '🎖️', condition: { type: 'total_games', value: 100 }, reward: 200 },
   { id: 'legend', name: 'Legend', description: 'Play 500 games total', category: 'dedication', icon: '🏆', condition: { type: 'total_games', value: 500 }, reward: 500 },
+
+  // Daily challenge achievements
+  { id: 'daily_debut', name: 'Daily Debut', description: 'Complete your first daily challenge', category: 'dedication', icon: '📆', condition: { type: 'daily_challenges_completed', value: 1 }, reward: 25 },
+  { id: 'daily_regular', name: 'Daily Regular', description: 'Complete 10 daily challenges', category: 'dedication', icon: '📅', condition: { type: 'daily_challenges_completed', value: 10 }, reward: 100 },
+  { id: 'daily_devotee', name: 'Daily Devotee', description: 'Complete 50 daily challenges', category: 'dedication', icon: '🗓️', condition: { type: 'daily_challenges_completed', value: 50 }, reward: 300 },
+  { id: 'daily_master', name: 'Daily Master', description: 'Complete 100 daily challenges', category: 'dedication', icon: '🏅', condition: { type: 'daily_challenges_completed', value: 100 }, reward: 500 },
+  { id: 'streak_starter', name: 'Streak Starter', description: 'Achieve a 3-day daily streak', category: 'dedication', icon: '🔥', condition: { type: 'daily_streak_record', value: 3 }, reward: 50 },
+  { id: 'week_warrior', name: 'Week Warrior', description: 'Achieve a 7-day daily streak', category: 'dedication', icon: '💪', condition: { type: 'daily_streak_record', value: 7 }, reward: 150 },
+  { id: 'fortnight_focused', name: 'Fortnight Focused', description: 'Achieve a 14-day daily streak', category: 'dedication', icon: '🌟', condition: { type: 'daily_streak_record', value: 14 }, reward: 300 },
+  { id: 'monthly_maven', name: 'Monthly Maven', description: 'Achieve a 30-day daily streak', category: 'dedication', icon: '👑', condition: { type: 'daily_streak_record', value: 30 }, reward: 500 },
+  { id: 'precision_pro', name: 'Precision Pro', description: 'Complete daily with precision mode 5 times', category: 'skill', icon: '🎯', condition: { type: 'daily_precision_completed', value: 5 }, reward: 100 },
+  { id: 'perfect_daily', name: 'Perfect Daily', description: 'Complete daily with precision mode 25 times', category: 'skill', icon: '💎', condition: { type: 'daily_precision_completed', value: 25 }, reward: 300 },
 ];
 
 export function createInitialAchievements(): Achievement[] {
