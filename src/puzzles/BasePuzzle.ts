@@ -34,6 +34,10 @@ export abstract class BasePuzzle {
     return this.container;
   }
 
+  getWrongMoves(): number {
+    return this.wrongMoves;
+  }
+
   getElapsedTime(): number {
     if (this.endTime > 0) {
       return this.endTime - this.startTime;

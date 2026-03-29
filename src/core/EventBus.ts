@@ -10,6 +10,9 @@ interface GameEventMap {
   'currency:spent': { type: 'coins' | MaterialType; amount: number };
   'achievement:unlocked': { achievementId: string };
   'daily:streak': { streak: number };
+  'daily:challenge:start': { puzzleType: PuzzleType; difficulty: number };
+  'daily:challenge:complete': { coins: number; streak: number; wasPerfect: boolean };
+  'daily:streak:broken': { previousStreak: number };
   'scene:transition': { from: string; to: string };
   'state:reset': void;
   'settings:changed': Record<string, unknown>;

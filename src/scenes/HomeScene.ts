@@ -179,13 +179,11 @@ export class HomeScene extends Phaser.Scene {
       this.scene.start('LevelSelectScene');
     }, COLORS.CORAL, true);
     
-    // Daily Challenge
+    // Daily Challenge - now navigates to DailyChallengeScene
     const dailyCompleted = StateManager.state.daily.todayChallengeCompleted;
     const dailyLabel = dailyCompleted ? 'Done for today! ✓' : 'Daily Challenge';
     this.createButton(x, startY + spacing, dailyLabel, 200, 56, () => {
-      if (!dailyCompleted) {
-        this.startDailyChallenge();
-      }
+      this.scene.start('DailyChallengeScene');
     }, dailyCompleted ? COLORS.SAGE : COLORS.SKY, false);
     
     // Endless Mode
@@ -418,41 +416,5 @@ export class HomeScene extends Phaser.Scene {
       overlay.destroy();
       panel.destroy();
     });
-  }
-
-  private startDailyChallenge(): void {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const dateSeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-
-    let prefix: string;
-    let levelMin: number;
-    let levelMax: number;
-
-    if (dayOfWeek === 0) {
-      const types = ['sort', 'untangle', 'pack'];
-      const typeIndex = dateSeed % 3;
-      prefix = types[typeIndex];
-      levelMin = types[typeIndex] === 'pack' ? 21 : 1;
-      levelMax = types[typeIndex] === 'pack' ? 30 : 10;
-    } else {
-      const typeMap: Record<number, { prefix: string; min: number; max: number }> = {
-        1: { prefix: 'sort', min: 1, max: 10 },
-        2: { prefix: 'untangle', min: 1, max: 10 },
-        3: { prefix: 'pack', min: 21, max: 30 },
-        4: { prefix: 'sort', min: 1, max: 10 },
-        5: { prefix: 'untangle', min: 1, max: 10 },
-        6: { prefix: 'pack', min: 21, max: 30 },
-      };
-      const config = typeMap[dayOfWeek];
-      prefix = config.prefix;
-      levelMin = config.min;
-      levelMax = config.max;
-    }
-
-    const levelNum = levelMin + (dateSeed % (levelMax - levelMin + 1));
-    const levelId = `${prefix}_${String(levelNum).padStart(2, '0')}`;
-
-    this.scene.start('GameScene', { levelId, isDaily: true });
   }
 }
