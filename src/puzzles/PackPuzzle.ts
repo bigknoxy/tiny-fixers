@@ -270,6 +270,8 @@ export class PackPuzzle extends BasePuzzle {
     itemObj.placedY = item.y;
     this.unplacedCount--;
 
+    item.disableInteractive();
+
     this.scene.tweens.add({
       targets: item,
       scale: 1,

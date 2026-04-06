@@ -259,17 +259,18 @@ export class HomeScene extends Phaser.Scene {
         duration: 150,
         ease: ANIMATIONS.SMOOTH_EASE,
       });
+      container.y = y;
     });
-    
+
     container.on('pointerdown', () => {
       this.tweens.add({
         targets: container,
         scale: 0.95,
         duration: 50,
       });
-      container.y += 2;
+      container.y = y + 2;
     });
-    
+
     container.on('pointerup', () => {
       this.tweens.add({
         targets: container,
