@@ -15,6 +15,7 @@ import { getTypeColor } from '@/utils/puzzle';
 import { TutorialModal } from '@/systems/TutorialModal';
 import { isFirstLevelOfPuzzleType, getPuzzleTypeByFirstLevel } from '@/data/puzzleTutorials';
 import { getEffectiveTimeLimit } from '@/config/daily';
+import { AdManager } from '@/systems/AdManager';
 
 interface GameSceneData {
   levelId?: string;
@@ -97,6 +98,13 @@ export class GameScene extends Phaser.Scene {
     this.startTimer();
 
     InputManager.setEnabled(true);
+
+    // Play music matching puzzle type
+    const musicKey = `music_${this.level.type}`;
+    AudioManager.playMusic(musicKey);
+
+    // Clean up on scene shutdown
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.shutdown());
 
     // Show tutorial for first-time puzzle type
     this.checkAndShowPuzzleTutorial();
@@ -436,8 +444,22 @@ export class GameScene extends Phaser.Scene {
   }
 
   private timeUp(): void {
-    this.isComplete = true;
-    this.showResults(false);
+    if (AdManager.isAdAvailable()) {
+      this.isPaused = true;
+      AdManager.showRewarded('time_extend', (rewarded) => {
+        if (rewarded) {
+          this.timeRemaining = 30;
+          this.isPaused = false;
+          this.timerText.setColor(colorToHex(COLORS.CHARCOAL));
+        } else {
+          this.isComplete = true;
+          this.showResults(false);
+        }
+      });
+    } else {
+      this.isComplete = true;
+      this.showResults(false);
+    }
   }
 
   private levelComplete(): void {

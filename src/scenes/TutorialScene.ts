@@ -12,11 +12,9 @@ interface TutorialStep {
 }
 
 const TUTORIAL_STEPS: TutorialStep[] = [
-  { text: 'Welcome to Tiny Fixers!' },
-  { text: 'Help fix tiny problems by sorting items.' },
-  { text: 'Drag the RED ball to the RED bin!', highlight: { x: 100, y: 220, width: 60, height: 60 } },
-  { text: 'Great! Now drag the BLUE ball to the BLUE bin!', highlight: { x: 290, y: 220, width: 60, height: 60 } },
-  { text: 'Amazing! You got it!' },
+  { text: 'Welcome! Drag the RED ball to the RED bin!', highlight: { x: 100, y: 220, width: 60, height: 60 } },
+  { text: 'Now drag the BLUE ball to the BLUE bin!', highlight: { x: 290, y: 220, width: 60, height: 60 } },
+  { text: 'You\'re a natural! Let\'s go!' },
 ];
 
 export class TutorialScene extends Phaser.Scene {
@@ -242,11 +240,8 @@ export class TutorialScene extends Phaser.Scene {
 
     this.handPointer.setVisible(false);
 
-    if (stepIndex === 0 || stepIndex === 1) {
-      this.time.delayedCall(1500, () => {
-        this.showStep(stepIndex + 1);
-      });
-    } else if (stepIndex === 4) {
+    // Steps 0 and 1 wait for user drag. Step 2 shows completion.
+    if (stepIndex === 2) {
       this.time.delayedCall(500, () => {
         this.showCompleteButton();
       });
@@ -266,11 +261,11 @@ export class TutorialScene extends Phaser.Scene {
       repeat: -1,
     });
 
-    if (this.currentStep === 2) {
+    if (this.currentStep === 0) {
       this.handPointer.setPosition(area.x, area.y);
       this.handPointer.setVisible(true);
       this.animateHandToBin(area.x, area.y, this.binPositions.red.x, this.binPositions.red.y);
-    } else if (this.currentStep === 3) {
+    } else if (this.currentStep === 1) {
       this.handPointer.setPosition(area.x, area.y);
       this.handPointer.setVisible(true);
       this.animateHandToBin(area.x, area.y, this.binPositions.blue.x, this.binPositions.blue.y);
@@ -345,7 +340,8 @@ export class TutorialScene extends Phaser.Scene {
       AudioManager.playSound('click');
       InputManager.vibrate(20);
       this.time.delayedCall(100, () => {
-        this.scene.start('LevelSelectScene', { showWelcome: true });
+        // Route directly to first level for immediate engagement
+        this.scene.start('GameScene', { levelId: 'sort_01' });
       });
     });
 

@@ -74,6 +74,13 @@ function migrateState(state: unknown, version: number): GameState {
     if (!savedState.achievementStats.dailyPerfectStreak) {
       savedState.achievementStats.dailyPerfectStreak = 0;
     }
+    // Add new hub locations for expanded content
+    if (!savedState.progress.hubProgress['bakery']) {
+      savedState.progress.hubProgress['bakery'] = { id: 'bakery', currentStage: 0, maxStage: 3, unlocked: false };
+    }
+    if (!savedState.progress.hubProgress['library']) {
+      savedState.progress.hubProgress['library'] = { id: 'library', currentStage: 0, maxStage: 3, unlocked: false };
+    }
   }
   
   return savedState;
@@ -102,6 +109,8 @@ function createDefaultProgress(): ProgressState {
     hubProgress: {
       flower_shop: { id: 'flower_shop', currentStage: 0, maxStage: 3, unlocked: true },
       tool_shed: { id: 'tool_shed', currentStage: 0, maxStage: 3, unlocked: false },
+      bakery: { id: 'bakery', currentStage: 0, maxStage: 3, unlocked: false },
+      library: { id: 'library', currentStage: 0, maxStage: 3, unlocked: false },
     },
     unlockedPuzzles: ['sort_01', 'sort_02', 'sort_03'],
     unlockedCharacters: ['helper_01'],
@@ -318,6 +327,8 @@ class StateManagerClass {
 
     this.queueSave();
     EventBus.emit('level:complete', { levelId, stars, time });
+
+    // Battle pass XP is handled via EventBus subscription in BattlePass.ts
   }
 
   isLevelUnlocked(levelId: string, levelIndex?: number): boolean {

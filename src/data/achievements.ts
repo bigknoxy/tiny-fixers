@@ -22,13 +22,15 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   { id: 'getting_started', name: 'Getting Started', description: 'Complete 5 puzzles', category: 'progression', icon: '⭐', condition: { type: 'levels_completed', value: 5 }, reward: 50 },
   { id: 'problem_solver', name: 'Problem Solver', description: 'Complete 10 puzzles', category: 'progression', icon: '🧩', condition: { type: 'levels_completed', value: 10 }, reward: 75 },
   { id: 'fixer_upper', name: 'Fixer Upper', description: 'Complete 20 puzzles', category: 'progression', icon: '🏠', condition: { type: 'levels_completed', value: 20 }, reward: 100 },
-  { id: 'master_fixer', name: 'Master Fixer', description: 'Complete all 30 levels', category: 'progression', icon: '🏆', condition: { type: 'levels_completed', value: 30 }, reward: 200 },
+  { id: 'half_century', name: 'Half Century', description: 'Complete 50 puzzles', category: 'progression', icon: '🎯', condition: { type: 'levels_completed', value: 50 }, reward: 150 },
+  { id: 'master_fixer', name: 'Master Fixer', description: 'Complete 100 levels', category: 'progression', icon: '🏆', condition: { type: 'levels_completed', value: 100 }, reward: 300 },
 
   // Skill - stars earned
   { id: 'star_collector', name: 'Star Collector', description: 'Earn 10 stars', category: 'skill', icon: '⭐', condition: { type: 'stars_earned', value: 10 }, reward: 50 },
   { id: 'shining_bright', name: 'Shining Bright', description: 'Earn 30 stars', category: 'skill', icon: '🌟', condition: { type: 'stars_earned', value: 30 }, reward: 75 },
   { id: 'star_excellence', name: 'Star Excellence', description: 'Earn 60 stars', category: 'skill', icon: '💫', condition: { type: 'stars_earned', value: 60 }, reward: 150 },
   { id: 'perfectionist', name: 'Perfectionist', description: 'Earn 90 stars', category: 'skill', icon: '✨', condition: { type: 'stars_earned', value: 90 }, reward: 250 },
+  { id: 'star_hoarder', name: 'Star Hoarder', description: 'Earn 200 stars', category: 'skill', icon: '🌠', condition: { type: 'stars_earned', value: 200 }, reward: 400 },
 
   // Dedication - daily streaks
   { id: 'consistency', name: 'Consistency', description: 'Play 3 days in a row', category: 'dedication', icon: '🔥', condition: { type: 'daily_streak', value: 3 }, reward: 50 },

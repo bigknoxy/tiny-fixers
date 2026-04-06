@@ -1,5 +1,6 @@
 import { LevelData, PuzzleType, MaterialType, SortConfig, UntangleConfig, PackConfig, WorldData } from '@/config/types';
 import { COLORS } from '@/config/colors';
+import { generateCampaignLevels } from './levelGenerator';
 
 function createSortLevel(
   id: string,
@@ -671,6 +672,7 @@ export const LEVELS: LevelData[] = [
     80,
     40
   ),
+  ...generateCampaignLevels(),
 ];
 
 export function getLevelById(id: string): LevelData | undefined {
@@ -712,6 +714,33 @@ export const WORLDS: WorldData[] = [
     icon: '🎁',
     levelIds: ['pack_21', 'pack_22', 'pack_23', 'pack_24', 'pack_25', 'pack_26', 'pack_27', 'pack_28', 'pack_29', 'pack_30'],
     requiredStars: 35,
+  },
+  {
+    id: 'world_mixed_mastery',
+    name: 'Mixed Mastery',
+    description: 'All puzzle types, greater challenge',
+    color: COLORS.MUSTARD,
+    icon: '🏆',
+    levelIds: LEVELS.slice(30, 50).map(l => l.id),
+    requiredStars: 45,
+  },
+  {
+    id: 'world_expert',
+    name: 'Expert Challenge',
+    description: 'Push your skills to the limit',
+    color: COLORS.LAVENDER,
+    icon: '💎',
+    levelIds: LEVELS.slice(50, 80).map(l => l.id),
+    requiredStars: 90,
+  },
+  {
+    id: 'world_master',
+    name: 'Master Collection',
+    description: 'Only the best can conquer these',
+    color: COLORS.CORAL,
+    icon: '👑',
+    levelIds: LEVELS.slice(80, 120).map(l => l.id),
+    requiredStars: 150,
   },
 ];
 
