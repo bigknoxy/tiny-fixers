@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS, colorToHex } from '@/config/colors';
 import { UI, ANIMATIONS } from '@/config/game.config';
-import { LevelData, PuzzleType, SortConfig, UntangleConfig, PackConfig } from '@/config/types';
+import { LevelData, PuzzleType, SortConfig, UntangleConfig, PackConfig, DailyModifier, DailyModifierType } from '@/config/types';
 import { getLevelById } from '@/data/levels';
 import { StateManager } from '@/core/StateManager';
 import { Effects } from '@/systems/Effects';
@@ -14,6 +14,7 @@ import { PackPuzzle } from '@/puzzles/PackPuzzle';
 import { getTypeColor } from '@/utils/puzzle';
 import { TutorialModal } from '@/systems/TutorialModal';
 import { isFirstLevelOfPuzzleType, getPuzzleTypeByFirstLevel } from '@/data/puzzleTutorials';
+import { getEffectiveTimeLimit } from '@/config/daily';
 import { AdManager } from '@/systems/AdManager';
 
 interface GameSceneData {
@@ -30,12 +31,15 @@ export class GameScene extends Phaser.Scene {
   private isDaily: boolean = false;
   private isEndless: boolean = false;
   private endlessScore: number = 0;
+  private dailyModifiers: DailyModifier[] = [];
+  private precisionModeFailed: boolean = false;
 
   private timeRemaining!: number;
   private timerText!: Phaser.GameObjects.Text;
   private timerCircle!: Phaser.GameObjects.Arc;
   private progressText!: Phaser.GameObjects.Text;
   private progressFill!: Phaser.GameObjects.Rectangle;
+  private timerEvent!: Phaser.Time.TimerEvent;
 
   private isPaused: boolean = false;
   private isComplete: boolean = false;
@@ -45,6 +49,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   init(data: GameSceneData): void {
+    // Check for daily challenge replay - prevent playing if already completed today
+    if (data.isDaily && StateManager.getTodayChallengeCompleted()) {
+      console.warn('Daily challenge already completed today, redirecting...');
+      this.scene.start('DailyChallengeScene', { alreadyCompleted: true });
+      return;
+    }
+
     if (data.levelData) {
       this.level = data.levelData;
     } else if (data.levelId) {
@@ -64,11 +75,15 @@ export class GameScene extends Phaser.Scene {
     this.isDaily = data.isDaily || false;
     this.isEndless = data.isEndless || false;
     this.endlessScore = data.endlessScore || 0;
+    this.dailyModifiers = data.levelData?.modifiers ?? [];
+    this.precisionModeFailed = false;
     this.isPaused = false;
     this.isComplete = false;
   }
 
   create(): void {
+    Effects.init(this);
+    
     const { width, height } = this.scale;
     const centerX = width / 2;
 
@@ -150,16 +165,31 @@ export class GameScene extends Phaser.Scene {
     const nameBg = this.add.rectangle(x, safeTop + 15, 180, 32, typeColor, 0.9);
     nameBg.setStrokeStyle(2, 0xFFFFFF, 0.5);
     
-    this.add.text(x, safeTop + 15, this.level.name, {
+    const levelName = this.isDaily ? `Daily: ${this.level.name}` : this.level.name;
+    this.add.text(x, safeTop + 15, levelName, {
       fontFamily: UI.FONT_FAMILY_DISPLAY,
       fontSize: '16px',
       fontStyle: 'bold',
       color: '#FFFFFF',
     }).setOrigin(0.5);
 
-    // Timer display
+    // Timer display - apply time multiplier if speed round is active
     const config = this.level.config as SortConfig | UntangleConfig | PackConfig;
-    this.timeRemaining = config.timeLimit;
+    const baseTime = config.timeLimit;
+    this.timeRemaining = getEffectiveTimeLimit(baseTime, this.dailyModifiers);
+
+    // Show precision mode warning if active
+    const hasPrecisionMode = this.dailyModifiers.some(m => m.type === DailyModifierType.PRECISION_MODE);
+    if (hasPrecisionMode) {
+      const warningBg = this.add.rectangle(x, safeTop + 110, 200, 28, COLORS.CORAL, 0.9);
+      warningBg.setStrokeStyle(2, 0xFFFFFF);
+      this.add.text(x, safeTop + 110, '🎯 No mistakes allowed!', {
+        fontFamily: UI.FONT_FAMILY_BODY,
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#FFFFFF',
+      }).setOrigin(0.5);
+    }
 
     const timerY = safeTop + 70;
     
@@ -260,7 +290,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private startTimer(): void {
-    this.time.addEvent({
+    this.timerEvent = this.time.addEvent({
       delay: 1000,
       callback: () => {
         if (this.isPaused || this.isComplete) return;
@@ -471,7 +501,13 @@ export class GameScene extends Phaser.Scene {
       StateManager.recordGamePlayed(this.level.type, wasPerfect);
 
       if (this.isDaily) {
-        StateManager.completeDailyChallenge();
+        const { coins: dailyCoins } = StateManager.completeDailyChallengeWithRewards(
+          score.time,
+          this.dailyModifiers,
+          wasPerfect
+        );
+        // Use daily rewards instead of regular
+        score.coins = dailyCoins;
       }
 
       score.materials.forEach((m) => {
@@ -489,6 +525,8 @@ export class GameScene extends Phaser.Scene {
       coins: score.coins,
       materials: score.materials,
       isDaily: this.isDaily,
+      dailyModifiers: this.dailyModifiers,
+      wasPrecisionPerfect: this.isDaily && !this.precisionModeFailed && this.hasPrecisionMode(),
     });
   }
 
@@ -500,13 +538,35 @@ export class GameScene extends Phaser.Scene {
 
       this.updateProgressText();
 
+      // Check for precision mode failure
+      if (this.isDaily && this.hasPrecisionMode() && this.puzzle.getWrongMoves() > 0 && !this.precisionModeFailed) {
+        this.precisionModeFailed = true;
+        this.failPrecisionMode();
+        return;
+      }
+
       if (this.puzzle.checkWin()) {
         this.levelComplete();
       }
     }
   }
 
+  private hasPrecisionMode(): boolean {
+    return this.dailyModifiers.some(m => m.type === DailyModifierType.PRECISION_MODE);
+  }
+
+  private failPrecisionMode(): void {
+    this.isComplete = true;
+    this.showResults(false);
+  }
+
   shutdown(): void {
+    // Clean up timer event
+    if (this.timerEvent) {
+      this.timerEvent.destroy();
+      this.timerEvent = null as unknown as Phaser.Time.TimerEvent;
+    }
+
     if (this.puzzle) {
       this.puzzle.destroy();
     }

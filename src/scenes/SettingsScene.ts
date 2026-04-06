@@ -31,7 +31,7 @@ export class SettingsScene extends Phaser.Scene {
 
     const title = this.add.text(0, 0, 'Settings', {
       fontSize: '32px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#FFFFFF',
       fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -124,7 +124,7 @@ export class SettingsScene extends Phaser.Scene {
 
     const labelText = this.add.text(-130, 0, label, {
       fontSize: '20px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_BODY,
       color: '#FFFFFF',
     }).setOrigin(0, 0.5);
 
@@ -186,7 +186,7 @@ export class SettingsScene extends Phaser.Scene {
 
     const labelText = this.add.text(-130, -15, label, {
       fontSize: '18px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_BODY,
       color: '#FFFFFF',
     }).setOrigin(0, 0.5);
 
@@ -239,7 +239,7 @@ export class SettingsScene extends Phaser.Scene {
 
     const label = this.add.text(0, 0, 'Reset Game', {
       fontSize: '18px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#FFFFFF',
       fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -266,20 +266,20 @@ export class SettingsScene extends Phaser.Scene {
 
     const title = this.add.text(0, -60, 'Reset Game?', {
       fontSize: '24px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#333333',
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
     const message = this.add.text(0, -20, 'This will delete all progress.', {
       fontSize: '16px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_BODY,
       color: '#666666',
     }).setOrigin(0.5);
 
     const confirmBtn = this.add.text(-60, 40, 'Reset', {
       fontSize: '16px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#FFFFFF',
       backgroundColor: '#' + COLORS.ERROR.toString(16).padStart(6, '0'),
       padding: { x: 20, y: 10 },
@@ -287,7 +287,7 @@ export class SettingsScene extends Phaser.Scene {
 
     const cancelBtn = this.add.text(60, 40, 'Cancel', {
       fontSize: '16px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#FFFFFF',
       backgroundColor: '#' + COLORS.GRAY.toString(16).padStart(6, '0'),
       padding: { x: 20, y: 10 },
@@ -312,7 +312,7 @@ export class SettingsScene extends Phaser.Scene {
   private createVersionDisplay(x: number, y: number): void {
     this.add.text(x, y, `v${APP_VERSION}`, {
       fontSize: '14px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_BODY,
       color: '#999999',
     }).setOrigin(0.5);
   }

@@ -163,6 +163,7 @@ Before marking work complete:
 - [ ] `bun run build` succeeds
 - [ ] Manual test in browser at port 3456
 - [ ] Changes follow existing patterns
+- [ ] Run regression tests from `docs/QA-WORKFLOW.md`
 
 ---
 

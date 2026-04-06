@@ -5,6 +5,7 @@ import { UI, ANIMATIONS } from '@/config/game.config';
 class EffectsClass {
   private scene: Phaser.Scene | null = null;
   private activeParticles: Set<Phaser.GameObjects.Shape> = new Set();
+  private activeTweens: Set<Phaser.Tweens.Tween> = new Set();
   private ambientTimer: Phaser.Time.TimerEvent | null = null;
 
   init(scene: Phaser.Scene): void {
@@ -13,6 +14,11 @@ class EffectsClass {
   }
 
   cleanup(): void {
+    this.activeTweens.forEach(tween => {
+      tween.stop();
+    });
+    this.activeTweens.clear();
+
     this.activeParticles.forEach(particle => {
       if (particle.active) {
         this.scene?.tweens.killTweensOf(particle);
@@ -20,6 +26,8 @@ class EffectsClass {
       }
     });
     this.activeParticles.clear();
+
+    this.scene = null;
   }
 
   particles(
@@ -151,13 +159,17 @@ class EffectsClass {
   popIn(target: Phaser.GameObjects.GameObject, callback?: () => void): void {
     if (!this.scene) return;
 
-    const obj = target as unknown as Phaser.GameObjects.Components.Transform;
-    obj.setScale(0);
+    const obj = target as unknown as Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Alpha;
+    
+    const targetScale = Math.max(obj.scaleX, 0.01);
+    obj.setScale(0.01);
+    obj.setAlpha(0);
     
     this.scene.tweens.add({
       targets: target,
-      scaleX: 1,
-      scaleY: 1,
+      scaleX: targetScale,
+      scaleY: targetScale,
+      alpha: 1,
       duration: 400,
       ease: ANIMATIONS.SPRING_EASE,
       onComplete: callback,
@@ -381,7 +393,7 @@ class EffectsClass {
     
     this.activeParticles.add(glow);
     
-    this.scene.tweens.add({
+    const tween = this.scene.tweens.add({
       targets: glow,
       alpha: { from: 0.4 * intensity, to: 0.1 },
       scale: { from: 1, to: 1.3 },
@@ -390,7 +402,29 @@ class EffectsClass {
       repeat: -1,
     });
     
-    return glow;
+    this.activeTweens.add(tween);
+    
+    // Return object with cleanup method
+    const glowObj = glow;
+    const cleanup = () => {
+      this.activeTweens.delete(tween);
+      this.activeParticles.delete(glowObj);
+      this.scene?.tweens.killTweensOf(glowObj);
+      glowObj.destroy();
+    };
+    
+    // Attach cleanup method to glow object
+    (glowObj as unknown as { cleanup: () => void }).cleanup = cleanup;
+    
+    return glowObj;
+  }
+
+  stopGlow(glow: Phaser.GameObjects.Shape | null): void {
+    if (!glow) return;
+    const cleanupFn = (glow as unknown as { cleanup?: () => void }).cleanup;
+    if (cleanupFn) {
+      cleanupFn();
+    }
   }
 
   trail(x: number, y: number, color: number): void {

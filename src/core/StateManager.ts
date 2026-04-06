@@ -11,10 +11,14 @@ import {
   PuzzleType,
   Achievement,
   AchievementStats,
+  DailyModifier,
+  DailyChallenge,
+  DailyCompletion,
 } from '@/config/types';
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
 import { createInitialAchievements, ACHIEVEMENT_DEFINITIONS, AchievementDefinition } from '@/data/achievements';
+import { getDifficultyForDay, getDailyPuzzleType, getModifiersForDay, getBaseCoins, calculateStreakBonus, calculateModifierBonus } from '@/config/daily';
 
 const CURRENT_VERSION = 6;
 
@@ -44,8 +48,32 @@ function migrateState(state: unknown, version: number): GameState {
       savedState.achievementStats = createDefaultAchievementStats();
     }
   }
-
+  
   if (version < 6) {
+    // Guard: ensure daily state exists (for users who never played daily before v6)
+    if (!savedState.daily) {
+      savedState.daily = createDefaultDaily();
+    }
+    // Migrate DailyState with new fields
+    if (!savedState.daily.completedChallenges) {
+      savedState.daily.completedChallenges = [];
+    }
+    if (savedState.daily.totalDailyWins === undefined) {
+      savedState.daily.totalDailyWins = 0;
+    }
+    if (!savedState.daily.lastCompletedDate) {
+      savedState.daily.lastCompletedDate = null;
+    }
+    // Migrate AchievementStats with new daily fields
+    if (!savedState.achievementStats.dailyChallengesCompleted) {
+      savedState.achievementStats.dailyChallengesCompleted = 0;
+    }
+    if (!savedState.achievementStats.dailyStreakRecord) {
+      savedState.achievementStats.dailyStreakRecord = 0;
+    }
+    if (!savedState.achievementStats.dailyPerfectStreak) {
+      savedState.achievementStats.dailyPerfectStreak = 0;
+    }
     // Add new hub locations for expanded content
     if (!savedState.progress.hubProgress['bakery']) {
       savedState.progress.hubProgress['bakery'] = { id: 'bakery', currentStage: 0, maxStage: 3, unlocked: false };
@@ -54,7 +82,7 @@ function migrateState(state: unknown, version: number): GameState {
       savedState.progress.hubProgress['library'] = { id: 'library', currentStage: 0, maxStage: 3, unlocked: false };
     }
   }
-
+  
   return savedState;
 }
 
@@ -120,6 +148,9 @@ function createDefaultDaily(): DailyState {
     longestStreak: 0,
     todayChallengeCompleted: false,
     weeklyRewardsClaimed: [],
+    completedChallenges: [],
+    totalDailyWins: 0,
+    lastCompletedDate: null,
   };
 }
 
@@ -140,6 +171,9 @@ function createDefaultAchievementStats(): AchievementStats {
       [PuzzleType.UNTANGLE]: 0,
       [PuzzleType.PACK]: 0,
     },
+    dailyChallengesCompleted: 0,
+    dailyStreakRecord: 0,
+    dailyPerfectStreak: 0,
   };
 }
 
@@ -365,21 +399,26 @@ class StateManagerClass {
     const today = new Date().toISOString().split('T')[0];
     const lastPlay = this._state.daily.lastPlayDate;
 
+    // Same-day retry: don't reset streak, just return current state
     if (lastPlay === today) {
       return { streak: this._state.daily.currentStreak, isNewDay: false };
     }
 
+    // New day logic - calculate streak based on whether it's consecutive
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     let newStreak = 1;
 
+    // Consecutive day: increment streak
     if (lastPlay === yesterday) {
       newStreak = this._state.daily.currentStreak + 1;
     }
+    // Gap in days: streak resets to 1 (but keep longestStreak intact)
 
     this._state.daily.lastPlayDate = today;
     this._state.daily.currentStreak = newStreak;
     this._state.daily.todayChallengeCompleted = false;
 
+    // Update longest streak if we exceeded it
     if (newStreak > this._state.daily.longestStreak) {
       this._state.daily.longestStreak = newStreak;
     }
@@ -399,6 +438,109 @@ class StateManagerClass {
   completeDailyChallenge(): void {
     this._state.daily.todayChallengeCompleted = true;
     this.queueSave();
+  }
+
+  getDailyChallenge(): DailyChallenge {
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    const dayOfWeek = today.getDay();
+    const dateSeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+
+    const puzzleType = getDailyPuzzleType(today);
+    
+    const modifiers = getModifiersForDay(dayOfWeek, dateSeed);
+    const difficulty = getDifficultyForDay(dayOfWeek);
+    const baseCoins = getBaseCoins(difficulty);
+    const streakBonus = calculateStreakBonus(this._state.daily.currentStreak);
+
+    return {
+      date: dateStr,
+      puzzleType,
+      modifiers,
+      difficulty,
+      baseCoins,
+      streakBonus,
+      completed: this._state.daily.todayChallengeCompleted,
+    };
+  }
+
+  completeDailyChallengeWithRewards(time: number, modifiers: DailyModifier[], wasPerfect: boolean): { coins: number; streak: number } {
+    const today = new Date().toISOString().split('T')[0];
+    const challenge = this.getDailyChallenge();
+    
+    // Calculate rewards
+    const modifierMultiplier = calculateModifierBonus(modifiers);
+    const baseCoins = challenge.baseCoins;
+    const streakBonus = challenge.streakBonus;
+    const totalCoins = Math.floor((baseCoins + streakBonus) * modifierMultiplier);
+
+    // Update state
+    this._state.daily.todayChallengeCompleted = true;
+    this._state.daily.totalDailyWins++;
+    this._state.daily.lastCompletedDate = today;
+    // NOTE: Streak is already incremented in updateDailyStreak() - do not increment here
+    
+    if (this._state.daily.currentStreak > this._state.daily.longestStreak) {
+      this._state.daily.longestStreak = this._state.daily.currentStreak;
+    }
+
+    // Record completion
+    const completion: DailyCompletion = {
+      date: today,
+      puzzleType: challenge.puzzleType,
+      modifiers: modifiers.map(m => m.type),
+      time,
+      coinsEarned: totalCoins,
+      streakAtCompletion: this._state.daily.currentStreak,
+    };
+    this._state.daily.completedChallenges.push(completion);
+
+    // Update achievement stats
+    this._state.achievementStats.dailyChallengesCompleted++;
+    if (this._state.daily.currentStreak > this._state.achievementStats.dailyStreakRecord) {
+      this._state.achievementStats.dailyStreakRecord = this._state.daily.currentStreak;
+    }
+    if (wasPerfect) {
+      this._state.achievementStats.dailyPerfectStreak++;
+    }
+
+    // Add coins
+    this.addCoins(totalCoins);
+    this.recordCoinsEarned(totalCoins);
+
+    // Emit events
+    EventBus.emit('daily:challenge:complete', { 
+      coins: totalCoins, 
+      streak: this._state.daily.currentStreak,
+      wasPerfect,
+    });
+
+    return { coins: totalCoins, streak: this._state.daily.currentStreak };
+  }
+
+  getDailyRewards(): { base: number; streak: number; modifier: number; total: number } {
+    const challenge = this.getDailyChallenge();
+    const streakBonus = calculateStreakBonus(this._state.daily.currentStreak);
+    const modifierMultiplier = calculateModifierBonus(challenge.modifiers);
+    const total = Math.floor((challenge.baseCoins + streakBonus) * modifierMultiplier);
+
+    return {
+      base: challenge.baseCoins,
+      streak: streakBonus,
+      modifier: Math.round((modifierMultiplier - 1) * 100),
+      total,
+    };
+  }
+
+  getDailyStreak(): { current: number; longest: number } {
+    return {
+      current: this._state.daily.currentStreak,
+      longest: this._state.daily.longestStreak,
+    };
+  }
+
+  getTodayChallengeCompleted(): boolean {
+    return this._state.daily.todayChallengeCompleted;
   }
 
   updateSettings(settings: Partial<SettingsState>): void {
@@ -524,6 +666,16 @@ class StateManagerClass {
       
       case 'coins_earned':
         return this._state.achievementStats.totalCoinsEarned >= value;
+      
+      // Daily achievement types
+      case 'daily_challenges_completed':
+        return this._state.achievementStats.dailyChallengesCompleted >= value;
+      
+      case 'daily_streak_record':
+        return this._state.achievementStats.dailyStreakRecord >= value;
+      
+      case 'daily_precision_completed':
+        return this._state.achievementStats.dailyPerfectStreak >= value;
       
       default:
         return false;

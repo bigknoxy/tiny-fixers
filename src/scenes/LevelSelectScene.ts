@@ -33,6 +33,8 @@ export class LevelSelectScene extends Phaser.Scene {
   }
 
   create(): void {
+    Effects.init(this);
+    
     const { width, height } = this.scale;
     const centerX = width / 2;
     const safeTop = UI.SAFE_AREA_TOP + 20;
