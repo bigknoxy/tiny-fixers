@@ -221,12 +221,12 @@ export class SortPuzzle extends BasePuzzle {
     const itemBounds = item.getBounds();
 
     for (const bin of this.bins) {
-      const binBounds = bin.body.getBounds();
-      // Adjust bounds to bin container world position
-      binBounds.x = bin.container.x - bin.body.width / 2;
-      binBounds.y = bin.container.y - bin.body.height / 2;
-      binBounds.width = bin.body.width;
-      binBounds.height = bin.body.height;
+      const binBounds = new Phaser.Geom.Rectangle(
+        bin.data.position.x - bin.data.size.x / 2,
+        bin.data.position.y - bin.data.size.y / 2,
+        bin.data.size.x,
+        bin.data.size.y
+      );
 
       if (Phaser.Geom.Rectangle.Overlaps(itemBounds, binBounds)) {
         if (bin.data.acceptedTypes.includes(itemData.type)) {

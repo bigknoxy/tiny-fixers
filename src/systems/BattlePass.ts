@@ -47,7 +47,11 @@ class BattlePassClass {
   }
 
   getState(): BattlePassState {
-    return this.state;
+    return {
+      ...this.state,
+      claimedFreeTiers: [...this.state.claimedFreeTiers],
+      claimedPremiumTiers: [...this.state.claimedPremiumTiers],
+    };
   }
 
   getSeason(): BattlePassSeason {
