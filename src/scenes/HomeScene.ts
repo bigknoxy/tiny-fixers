@@ -19,6 +19,7 @@ export class HomeScene extends Phaser.Scene {
 
     Effects.init(this);
     AchievementNotification.setupListeners(this);
+    AudioManager.playMusic('music_home');
 
     this.createBackground(width, height);
     

@@ -12,11 +12,12 @@ import {
   Achievement,
   AchievementStats,
 } from '@/config/types';
+import { BattlePass } from '@/systems/BattlePass';
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
 import { createInitialAchievements, ACHIEVEMENT_DEFINITIONS, AchievementDefinition } from '@/data/achievements';
 
-const CURRENT_VERSION = 5;
+const CURRENT_VERSION = 6;
 
 function migrateState(state: unknown, version: number): GameState {
   const savedState = state as GameState;
@@ -44,7 +45,17 @@ function migrateState(state: unknown, version: number): GameState {
       savedState.achievementStats = createDefaultAchievementStats();
     }
   }
-  
+
+  if (version < 6) {
+    // Add new hub locations for expanded content
+    if (!savedState.progress.hubProgress['bakery']) {
+      savedState.progress.hubProgress['bakery'] = { id: 'bakery', currentStage: 0, maxStage: 3, unlocked: false };
+    }
+    if (!savedState.progress.hubProgress['library']) {
+      savedState.progress.hubProgress['library'] = { id: 'library', currentStage: 0, maxStage: 3, unlocked: false };
+    }
+  }
+
   return savedState;
 }
 
@@ -71,6 +82,8 @@ function createDefaultProgress(): ProgressState {
     hubProgress: {
       flower_shop: { id: 'flower_shop', currentStage: 0, maxStage: 3, unlocked: true },
       tool_shed: { id: 'tool_shed', currentStage: 0, maxStage: 3, unlocked: false },
+      bakery: { id: 'bakery', currentStage: 0, maxStage: 3, unlocked: false },
+      library: { id: 'library', currentStage: 0, maxStage: 3, unlocked: false },
     },
     unlockedPuzzles: ['sort_01', 'sort_02', 'sort_03'],
     unlockedCharacters: ['helper_01'],
@@ -281,6 +294,9 @@ class StateManagerClass {
 
     this.queueSave();
     EventBus.emit('level:complete', { levelId, stars, time });
+
+    // Award battle pass XP (10 per star)
+    BattlePass.addXP(stars * 10, 'level_complete');
   }
 
   isLevelUnlocked(levelId: string, levelIndex?: number): boolean {

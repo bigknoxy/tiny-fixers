@@ -70,6 +70,74 @@ export const HUB_LOCATIONS: HubLocation[] = [
       { type: 'puzzle_set', id: 'tools' },
     ],
   },
+  {
+    id: 'bakery',
+    name: 'Bakery',
+    description: 'A cozy bakery with delicious treats waiting to be made!',
+    requiredStars: 50,
+    stages: [
+      {
+        id: 'bakery_1',
+        name: 'Fix the Oven',
+        cost: 150,
+        materials: [{ type: MaterialType.METAL, amount: 3 }, { type: MaterialType.BRICK, amount: 2 }],
+        unlocks: ['character_baker'],
+      },
+      {
+        id: 'bakery_2',
+        name: 'Paint the Walls',
+        cost: 200,
+        materials: [{ type: MaterialType.PAINT, amount: 4 }, { type: MaterialType.WOOD, amount: 2 }],
+        unlocks: ['decoration_cake_display'],
+      },
+      {
+        id: 'bakery_3',
+        name: 'Grand Opening',
+        cost: 300,
+        materials: [{ type: MaterialType.GLASS, amount: 3 }, { type: MaterialType.PAINT, amount: 2 }],
+        unlocks: ['puzzle_set_bakery'],
+      },
+    ],
+    rewards: [
+      { type: 'character', id: 'baker' },
+      { type: 'decoration', id: 'cake_display' },
+      { type: 'puzzle_set', id: 'bakery' },
+    ],
+  },
+  {
+    id: 'library',
+    name: 'Library',
+    description: 'A dusty old library full of stories waiting to be told!',
+    requiredStars: 100,
+    stages: [
+      {
+        id: 'library_1',
+        name: 'Sort the Books',
+        cost: 200,
+        materials: [{ type: MaterialType.WOOD, amount: 4 }, { type: MaterialType.PAINT, amount: 2 }],
+        unlocks: ['character_librarian'],
+      },
+      {
+        id: 'library_2',
+        name: 'Replace the Shelves',
+        cost: 300,
+        materials: [{ type: MaterialType.WOOD, amount: 5 }, { type: MaterialType.METAL, amount: 3 }],
+        unlocks: ['decoration_reading_nook'],
+      },
+      {
+        id: 'library_3',
+        name: 'Reading Room',
+        cost: 400,
+        materials: [{ type: MaterialType.GLASS, amount: 4 }, { type: MaterialType.BRICK, amount: 3 }],
+        unlocks: ['puzzle_set_library'],
+      },
+    ],
+    rewards: [
+      { type: 'character', id: 'librarian' },
+      { type: 'decoration', id: 'reading_nook' },
+      { type: 'puzzle_set', id: 'library' },
+    ],
+  },
 ];
 
 export const CHARACTERS: Character[] = [
