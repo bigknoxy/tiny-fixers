@@ -53,11 +53,9 @@ class AnalyticsClass {
     this.queue.push(enriched);
 
     if (this.provider === 'none') {
-      // Dev mode: log to console
       if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
-        console.debug(`[Analytics] ${event}`, properties);
+        console.warn(`[Analytics] ${event}`, properties);
       }
-      // Clear queue since we're not sending anywhere
       this.queue = [];
       return;
     }

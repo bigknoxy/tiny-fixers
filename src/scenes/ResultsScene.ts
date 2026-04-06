@@ -250,7 +250,7 @@ export class ResultsScene extends Phaser.Scene {
   }
 
   private createButtons(x: number, y: number, isRetry: boolean = false): void {
-    let yOffset = y;
+    const yOffset = y;
 
     // 2x Coins ad button (only on success and when ads available)
     if (this.resultsData.success && AdManager.isAdAvailable()) {
