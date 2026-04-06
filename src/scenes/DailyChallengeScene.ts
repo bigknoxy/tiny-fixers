@@ -13,9 +13,14 @@ import { InputManager } from '@/systems/InputManager';
 export class DailyChallengeScene extends Phaser.Scene {
   private dailyLevel!: ReturnType<typeof generateDailyLevel>;
   private modifierTweens: Phaser.Tweens.Tween[] = [];
+  private alreadyCompleted: boolean = false;
 
   constructor() {
     super({ key: 'DailyChallengeScene' });
+  }
+
+  init(data: { alreadyCompleted?: boolean } = {}): void {
+    this.alreadyCompleted = data.alreadyCompleted || false;
   }
 
   create(): void {
@@ -232,7 +237,7 @@ export class DailyChallengeScene extends Phaser.Scene {
   }
 
   private createPlayButton(x: number, y: number): void {
-    const isCompleted = StateManager.getTodayChallengeCompleted();
+    const isCompleted = StateManager.getTodayChallengeCompleted() || this.alreadyCompleted;
     const buttonText = isCompleted ? 'Come Back Tomorrow' : 'Play Challenge';
 
     const container = this.add.container(x, y);
@@ -279,7 +284,9 @@ export class DailyChallengeScene extends Phaser.Scene {
           onComplete: () => {
             AudioManager.playSound('click');
             InputManager.vibrate(20);
-            this.startChallenge();
+            if (!isCompleted) {
+              this.startChallenge();
+            }
           },
         });
       });
