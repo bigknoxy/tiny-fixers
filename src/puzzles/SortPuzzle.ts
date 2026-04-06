@@ -188,15 +188,28 @@ export class SortPuzzle extends BasePuzzle {
         placed: false,
       };
 
-      // Idle float animation
+      // Idle float animation using absolute positions to prevent drift
+      const itemBaseY = itemData.position.y;
+      const hlBaseY = itemData.position.y - itemData.size * 0.3;
+      const floatDuration = 1800 + Math.random() * 400;
+      const floatDelay = Math.random() * 1000;
       itemObj.floatTween = this.scene.tweens.add({
-        targets: [item, highlightCircle],
-        y: `-=3`,
-        duration: 1800 + Math.random() * 400,
+        targets: item,
+        y: { from: itemBaseY, to: itemBaseY - 3 },
+        duration: floatDuration,
         ease: 'Sine.inOut',
         yoyo: true,
         repeat: -1,
-        delay: Math.random() * 1000,
+        delay: floatDelay,
+      });
+      this.scene.tweens.add({
+        targets: highlightCircle,
+        y: { from: hlBaseY, to: hlBaseY - 3 },
+        duration: floatDuration,
+        ease: 'Sine.inOut',
+        yoyo: true,
+        repeat: -1,
+        delay: floatDelay,
       });
 
       this.items.push(itemObj);
@@ -338,13 +351,23 @@ export class SortPuzzle extends BasePuzzle {
         duration: 200,
         ease: 'Back.out',
         onComplete: () => {
-          // Restart idle float
           const itemObj = this.items.find(it => it.data.id === itemData.id);
           if (itemObj && !itemObj.placed) {
+            const baseY = itemData.position.y;
+            const hlBaseY = itemData.position.y - itemData.size * 0.3;
+            const dur = 1800 + Math.random() * 400;
             itemObj.floatTween = this.scene.tweens.add({
-              targets: [item, highlight],
-              y: `-=3`,
-              duration: 1800 + Math.random() * 400,
+              targets: item,
+              y: { from: baseY, to: baseY - 3 },
+              duration: dur,
+              ease: 'Sine.inOut',
+              yoyo: true,
+              repeat: -1,
+            });
+            this.scene.tweens.add({
+              targets: highlight,
+              y: { from: hlBaseY, to: hlBaseY - 3 },
+              duration: dur,
               ease: 'Sine.inOut',
               yoyo: true,
               repeat: -1,

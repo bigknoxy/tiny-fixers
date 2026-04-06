@@ -211,21 +211,29 @@ export class UntanglePuzzle extends BasePuzzle {
   }
 
   update(_delta: number): void {
-    this.checkOverlaps();
-    this.drawConnectionLines();
+    this.checkOverlapsAndDrawLines();
   }
 
-  private drawConnectionLines(): void {
-    if (!this.connectionLines) return;
-    this.connectionLines.clear();
+  private checkOverlapsAndDrawLines(): void {
+    let anyOverlapping = false;
+
+    // Clear connection lines for redraw
+    if (this.connectionLines) {
+      this.connectionLines.clear();
+    }
+
+    const lineAlpha = 0.2 + Math.sin(Date.now() * 0.005) * 0.1;
+
+    // Single O(n^2) pass: check overlaps AND draw connection lines
+    // First, reset all overlap flags
+    for (let i = 0; i < this.objects.length; i++) {
+      this.objects[i].wasPreviouslyOverlapping = this.objects[i].isOverlapping;
+      this.objects[i].isOverlapping = false;
+    }
 
     for (let i = 0; i < this.objects.length; i++) {
-      if (!this.objects[i].isOverlapping) continue;
-
+      const obj1 = this.objects[i];
       for (let j = i + 1; j < this.objects.length; j++) {
-        if (!this.objects[j].isOverlapping) continue;
-
-        const obj1 = this.objects[i];
         const obj2 = this.objects[j];
         const dx = obj1.graphics.x - obj2.graphics.x;
         const dy = obj1.graphics.y - obj2.graphics.y;
@@ -233,64 +241,41 @@ export class UntanglePuzzle extends BasePuzzle {
         const minDistance = (obj1.data.size + obj2.data.size) - this.separationThreshold;
 
         if (distanceSq < minDistance * minDistance) {
-          // Red connection line with pulsing alpha
-          const alpha = 0.2 + Math.sin(Date.now() * 0.005) * 0.1;
-          this.connectionLines.lineStyle(2, COLORS.ERROR, alpha);
-          this.connectionLines.lineBetween(
-            obj1.graphics.x, obj1.graphics.y,
-            obj2.graphics.x, obj2.graphics.y
-          );
+          obj1.isOverlapping = true;
+          obj2.isOverlapping = true;
+          anyOverlapping = true;
+
+          // Draw connection line between this overlapping pair
+          if (this.connectionLines) {
+            this.connectionLines.lineStyle(2, COLORS.ERROR, lineAlpha);
+            this.connectionLines.lineBetween(
+              obj1.graphics.x, obj1.graphics.y,
+              obj2.graphics.x, obj2.graphics.y
+            );
+          }
         }
       }
     }
-  }
 
-  private checkOverlaps(): void {
-    let anyOverlapping = false;
-
-    for (let i = 0; i < this.objects.length; i++) {
-      const obj1 = this.objects[i];
-      let isOverlapping = false;
-
-      for (let j = 0; j < this.objects.length; j++) {
-        if (i === j) continue;
-
-        const obj2 = this.objects[j];
-        const dx = obj1.graphics.x - obj2.graphics.x;
-        const dy = obj1.graphics.y - obj2.graphics.y;
-        const distanceSq = dx * dx + dy * dy;
-        const minDistance = (obj1.data.size + obj2.data.size) - this.separationThreshold;
-        const minDistanceSq = minDistance * minDistance;
-
-        if (distanceSq < minDistanceSq) {
-          isOverlapping = true;
-          anyOverlapping = true;
-          break;
-        }
-      }
-
-      // Detect separation event: was overlapping, now isn't
-      if (obj1.wasPreviouslyOverlapping && !isOverlapping) {
-        // Flash green + sparkle on separation
-        obj1.graphics.setStrokeStyle(3, COLORS.SUCCESS, 1);
-        Effects.sparkle(obj1.graphics.x, obj1.graphics.y, 2);
+    // Update visual states and detect separations
+    for (const obj of this.objects) {
+      if (obj.wasPreviouslyOverlapping && !obj.isOverlapping) {
+        obj.graphics.setStrokeStyle(3, COLORS.SUCCESS, 1);
+        Effects.sparkle(obj.graphics.x, obj.graphics.y, 2);
         AudioManager.playSound('snap');
         this.scene.time.delayedCall(300, () => {
-          if (!obj1.isOverlapping) {
-            obj1.graphics.setStrokeStyle(2, COLORS.WHITE, 0.5);
+          if (!obj.isOverlapping) {
+            obj.graphics.setStrokeStyle(2, COLORS.WHITE, 0.5);
           }
         });
       }
 
-      obj1.wasPreviouslyOverlapping = obj1.isOverlapping;
-      obj1.isOverlapping = isOverlapping;
-
-      if (isOverlapping && !obj1.graphics.getData('highlighted')) {
-        obj1.graphics.setStrokeStyle(3, COLORS.ERROR, 1);
-        obj1.graphics.setData('highlighted', true);
-      } else if (!isOverlapping && obj1.graphics.getData('highlighted')) {
-        obj1.graphics.setStrokeStyle(2, COLORS.WHITE, 0.5);
-        obj1.graphics.setData('highlighted', false);
+      if (obj.isOverlapping && !obj.graphics.getData('highlighted')) {
+        obj.graphics.setStrokeStyle(3, COLORS.ERROR, 1);
+        obj.graphics.setData('highlighted', true);
+      } else if (!obj.isOverlapping && obj.graphics.getData('highlighted')) {
+        obj.graphics.setStrokeStyle(2, COLORS.WHITE, 0.5);
+        obj.graphics.setData('highlighted', false);
       }
     }
 

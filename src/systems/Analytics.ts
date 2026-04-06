@@ -14,8 +14,11 @@ class AnalyticsClass {
   private queue: AnalyticsEvent[] = [];
   private sessionId: string = '';
   private sessionStart: number = 0;
+  private initialized = false;
 
   init(): void {
+    if (this.initialized) return;
+    this.initialized = true;
     this.provider = 'none';
     this.sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     this.sessionStart = Date.now();

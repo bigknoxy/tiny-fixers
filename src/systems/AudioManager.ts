@@ -53,6 +53,8 @@ class AudioManagerClass {
     
     if (this.currentMusic) {
       this.currentMusic.stop();
+      this.currentMusic.destroy();
+      this.currentMusic = null;
     }
     
     if (this._muted || this._musicVolume === 0) return;

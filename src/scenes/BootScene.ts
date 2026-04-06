@@ -5,6 +5,9 @@ import { InputManager } from '@/systems/InputManager';
 import { Effects } from '@/systems/Effects';
 import { SoundGenerator } from '@/systems/SoundGenerator';
 import { Analytics } from '@/systems/Analytics';
+import { AdManager } from '@/systems/AdManager';
+import { BattlePass } from '@/systems/BattlePass';
+import { LiveOps } from '@/systems/LiveOps';
 import { COLORS } from '@/config/colors';
 
 export class BootScene extends Phaser.Scene {
@@ -279,6 +282,12 @@ export class BootScene extends Phaser.Scene {
     InputManager.init(this);
     Effects.init(this);
     Analytics.init();
+    AdManager.init();
+    BattlePass.init(StateManager.state.battlePass, (bpState) => {
+      StateManager.state.battlePass = bpState;
+      StateManager.queueSave();
+    });
+    LiveOps.init();
 
     this.setupVisibilityHandler();
 

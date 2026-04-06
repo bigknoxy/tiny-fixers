@@ -1,4 +1,4 @@
-import { HubLocation, Character, Achievement, MaterialType } from '@/config/types';
+import { HubLocation, Character, MaterialType } from '@/config/types';
 import { COLORS } from '@/config/colors';
 
 export const HUB_LOCATIONS: HubLocation[] = [
@@ -164,59 +164,3 @@ export const CHARACTERS: Character[] = [
   },
 ];
 
-export const ACHIEVEMENTS: Achievement[] = [
-  {
-    id: 'first_level',
-    name: 'First Steps',
-    description: 'Complete your first level',
-    condition: 'complete_level_1',
-    reward: 50,
-    unlocked: false,
-    unlockedAt: null,
-  },
-  {
-    id: 'ten_levels',
-    name: 'Getting Started',
-    description: 'Complete 10 levels',
-    condition: 'complete_10_levels',
-    reward: 100,
-    unlocked: false,
-    unlockedAt: null,
-  },
-  {
-    id: 'thirty_levels',
-    name: 'Puzzle Master',
-    description: 'Complete all 30 levels',
-    condition: 'complete_30_levels',
-    reward: 300,
-    unlocked: false,
-    unlockedAt: null,
-  },
-  {
-    id: 'all_stars',
-    name: 'Star Collector',
-    description: 'Get 3 stars on 10 levels',
-    condition: 'get_30_stars',
-    reward: 200,
-    unlocked: false,
-    unlockedAt: null,
-  },
-  {
-    id: 'seven_day_streak',
-    name: 'Dedicated Helper',
-    description: 'Play for 7 days in a row',
-    condition: '7_day_streak',
-    reward: 150,
-    unlocked: false,
-    unlockedAt: null,
-  },
-  {
-    id: 'hub_complete',
-    name: 'Neighborhood Hero',
-    description: 'Fully restore a location',
-    condition: 'complete_hub_location',
-    reward: 200,
-    unlocked: false,
-    unlockedAt: null,
-  },
-];

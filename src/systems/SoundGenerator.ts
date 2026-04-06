@@ -14,9 +14,14 @@ class SoundGeneratorClass {
     return this.audioContext;
   }
 
+  private getActualSampleRate(): number {
+    const ctx = this.getContext();
+    return ctx?.sampleRate || this.fallbackSampleRate;
+  }
+
   generateSound(type: string): ArrayBuffer {
     const ctx = this.getContext();
-    const sampleRate = ctx?.sampleRate || this.fallbackSampleRate;
+    const sampleRate = this.getActualSampleRate();
     const duration = this.getDuration(type);
     const numSamples = Math.floor(sampleRate * duration);
 
@@ -97,12 +102,13 @@ class SoundGeneratorClass {
   }
 
   private createFallbackBuffer(numSamples: number): AudioBuffer {
+    const channelData = new Float32Array(numSamples);
     const buffer = {
       length: numSamples,
       duration: numSamples / this.fallbackSampleRate,
       sampleRate: this.fallbackSampleRate,
       numberOfChannels: 1,
-      getChannelData: () => new Float32Array(numSamples),
+      getChannelData: () => channelData,
     } as unknown as AudioBuffer;
     return buffer;
   }
@@ -462,16 +468,15 @@ class SoundGeneratorClass {
 
   createWavBlob(type: string): Blob {
     const audioData = this.generateSound(type);
-    return this.encodeWav(audioData);
+    return this.encodeWav(audioData, this.getActualSampleRate());
   }
 
   createMusicWavBlob(type: 'home' | 'sort' | 'untangle' | 'pack'): Blob {
     const audioData = this.generateMusicLoop(type);
-    return this.encodeWav(audioData);
+    return this.encodeWav(audioData, this.getActualSampleRate());
   }
 
-  private encodeWav(audioData: ArrayBuffer): Blob {
-    const sampleRate = 44100;
+  private encodeWav(audioData: ArrayBuffer, sampleRate: number): Blob {
     const numChannels = 1;
     const bitsPerSample = 16;
     const byteRate = sampleRate * numChannels * bitsPerSample / 8;

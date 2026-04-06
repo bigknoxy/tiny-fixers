@@ -1,14 +1,6 @@
+import { BattlePassState } from '@/config/types';
 import { EventBus } from '@/core/EventBus';
 import { CURRENT_SEASON, BattlePassSeason } from '@/data/battlePassSeasons';
-
-export interface BattlePassState {
-  seasonId: string;
-  currentXP: number;
-  currentTier: number;
-  claimedFreeTiers: number[];
-  claimedPremiumTiers: number[];
-  isPremium: boolean;
-}
 
 export function createDefaultBattlePassState(): BattlePassState {
   return {
@@ -21,15 +13,36 @@ export function createDefaultBattlePassState(): BattlePassState {
   };
 }
 
+type PersistCallback = (state: BattlePassState) => void;
+
 class BattlePassClass {
   private state: BattlePassState = createDefaultBattlePassState();
   private season: BattlePassSeason = CURRENT_SEASON;
+  private initialized = false;
+  private onPersist: PersistCallback | null = null;
 
-  init(state: BattlePassState | undefined): void {
+  init(state: BattlePassState | undefined, persistCallback?: PersistCallback): void {
     if (state && state.seasonId === CURRENT_SEASON.id) {
       this.state = state;
     } else {
       this.state = createDefaultBattlePassState();
+    }
+    if (persistCallback) {
+      this.onPersist = persistCallback;
+    }
+
+    if (!this.initialized) {
+      this.initialized = true;
+      // Subscribe to level completions for XP
+      EventBus.on('level:complete', (data) => {
+        this.addXP(data.stars * 10, 'level_complete');
+      });
+    }
+  }
+
+  private persist(): void {
+    if (this.onPersist) {
+      this.onPersist(this.state);
     }
   }
 
@@ -58,7 +71,6 @@ class BattlePassClass {
     this.state.currentXP += amount;
     EventBus.emit('battlepass:xp', { amount, source });
 
-    // Check for tier-ups
     while (this.state.currentTier < this.season.tiers.length) {
       const requiredXP = this.season.tiers[this.state.currentTier].xpRequired;
       if (this.state.currentXP >= requiredXP) {
@@ -69,12 +81,16 @@ class BattlePassClass {
         break;
       }
     }
+
+    this.persist();
   }
 
   claimFreeReward(tier: number): boolean {
     if (tier > this.state.currentTier) return false;
     if (this.state.claimedFreeTiers.includes(tier)) return false;
     this.state.claimedFreeTiers.push(tier);
+    EventBus.emit('battlepass:claim', { tier, track: 'free' });
+    this.persist();
     return true;
   }
 
@@ -83,6 +99,8 @@ class BattlePassClass {
     if (tier > this.state.currentTier) return false;
     if (this.state.claimedPremiumTiers.includes(tier)) return false;
     this.state.claimedPremiumTiers.push(tier);
+    EventBus.emit('battlepass:claim', { tier, track: 'premium' });
+    this.persist();
     return true;
   }
 

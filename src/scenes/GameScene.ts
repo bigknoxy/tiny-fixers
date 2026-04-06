@@ -90,6 +90,9 @@ export class GameScene extends Phaser.Scene {
     const musicKey = `music_${this.level.type}`;
     AudioManager.playMusic(musicKey);
 
+    // Clean up on scene shutdown
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.shutdown());
+
     // Show tutorial for first-time puzzle type
     this.checkAndShowPuzzleTutorial();
   }

@@ -12,7 +12,6 @@ import {
   Achievement,
   AchievementStats,
 } from '@/config/types';
-import { BattlePass } from '@/systems/BattlePass';
 import { EventBus } from './EventBus';
 import { LEVELS } from '@/data/levels';
 import { createInitialAchievements, ACHIEVEMENT_DEFINITIONS, AchievementDefinition } from '@/data/achievements';
@@ -295,8 +294,7 @@ class StateManagerClass {
     this.queueSave();
     EventBus.emit('level:complete', { levelId, stars, time });
 
-    // Award battle pass XP (10 per star)
-    BattlePass.addXP(stars * 10, 'level_complete');
+    // Battle pass XP is handled via EventBus subscription in BattlePass.ts
   }
 
   isLevelUnlocked(levelId: string, levelIndex?: number): boolean {
