@@ -1,6 +1,6 @@
 {
   "name": "tiny-fixers",
-  "version": "0.0.0-development",
+  "version": "1.8.0",
   "description": "A cozy mobile puzzle game - help quirky characters fix tiny problems",
   "type": "module",
   "scripts": {
