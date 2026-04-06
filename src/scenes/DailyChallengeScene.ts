@@ -250,9 +250,13 @@ export class DailyChallengeScene extends Phaser.Scene {
 
     container.add([shadow, bg, label]);
     container.setSize(240, 60);
+    container.setScale(1);
 
-    if (!isCompleted) {
-      container.setInteractive({ useHandCursor: true });
+    const setupInteractive = () => {
+      container.setInteractive(
+        new Phaser.Geom.Rectangle(-120, -30, 240, 60),
+        Phaser.Geom.Rectangle.Contains
+      );
 
       container.on('pointerover', () => {
         this.tweens.add({ targets: container, scale: 1.05, duration: 150 });
@@ -279,9 +283,24 @@ export class DailyChallengeScene extends Phaser.Scene {
           },
         });
       });
-    }
+    };
 
-    Effects.popIn(container);
+    if (!isCompleted) {
+      container.setAlpha(0);
+      this.tweens.add({
+        targets: container,
+        alpha: 1,
+        duration: 300,
+        onComplete: setupInteractive,
+      });
+    } else {
+      container.setAlpha(0);
+      this.tweens.add({
+        targets: container,
+        alpha: 1,
+        duration: 300,
+      });
+    }
   }
 
   private createBackButton(x: number, y: number): void {
@@ -296,18 +315,32 @@ export class DailyChallengeScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     container.add([bg, icon]);
-    container.setInteractive({ useHandCursor: true });
+    container.setSize(44, 44);
+    container.setScale(1);
+    container.setAlpha(0);
 
-    container.on('pointerover', () => {
-      this.tweens.add({ targets: container, scale: 1.1, duration: 100 });
-    });
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      duration: 300,
+      onComplete: () => {
+        container.setInteractive(
+          new Phaser.Geom.Circle(0, 0, 22),
+          Phaser.Geom.Circle.Contains
+        );
 
-    container.on('pointerout', () => {
-      this.tweens.add({ targets: container, scale: 1, duration: 100 });
-    });
+        container.on('pointerover', () => {
+          this.tweens.add({ targets: container, scale: 1.1, duration: 100 });
+        });
 
-    container.on('pointerup', () => {
-      this.scene.start('HomeScene');
+        container.on('pointerout', () => {
+          this.tweens.add({ targets: container, scale: 1, duration: 100 });
+        });
+
+        container.on('pointerup', () => {
+          this.scene.start('HomeScene');
+        });
+      },
     });
   }
 

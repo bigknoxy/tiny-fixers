@@ -37,7 +37,7 @@ export class HubScene extends Phaser.Scene {
 
     const title = this.add.text(0, 0, 'My Hub', {
       fontSize: '32px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#FFFFFF',
       fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -45,7 +45,7 @@ export class HubScene extends Phaser.Scene {
     const coinsIcon = this.add.circle(100, 0, 12, COLORS.ACCENT);
     const coinsText = this.add.text(120, 0, `${StateManager.state.economy.coins}`, {
       fontSize: '20px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_BODY,
       color: '#FFFFFF',
     }).setOrigin(0, 0.5);
 
@@ -136,14 +136,14 @@ export class HubScene extends Phaser.Scene {
 
     const name = this.add.text(-140, -40, location.name, {
       fontSize: '22px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: isUnlocked ? '#4A90D9' : '#999999',
       fontStyle: 'bold',
     }).setOrigin(0, 0.5);
 
     const progress = this.add.text(-140, -10, `Stage ${hubState?.currentStage || 0}/${location.stages.length}`, {
       fontSize: '16px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_BODY,
       color: '#666666',
     }).setOrigin(0, 0.5);
 
@@ -163,7 +163,7 @@ export class HubScene extends Phaser.Scene {
     if (!isUnlocked && hasEnoughStars) {
       const unlockBtn = this.add.text(100, -40, 'Unlock', {
         fontSize: '16px',
-        fontFamily: 'Arial',
+        fontFamily: UI.FONT_FAMILY_DISPLAY,
         color: '#FFFFFF',
         backgroundColor: '#' + COLORS.SUCCESS.toString(16).padStart(6, '0'),
         padding: { x: 12, y: 6 },
@@ -180,7 +180,7 @@ export class HubScene extends Phaser.Scene {
     } else if (!isUnlocked) {
       const lockText = this.add.text(100, -40, `🔒 ${location.requiredStars} stars`, {
         fontSize: '14px',
-        fontFamily: 'Arial',
+        fontFamily: UI.FONT_FAMILY_BODY,
         color: '#999999',
       }).setOrigin(0.5);
 
@@ -232,7 +232,7 @@ export class HubScene extends Phaser.Scene {
 
     const title = this.add.text(0, -170, location.name, {
       fontSize: '28px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#4A90D9',
       fontStyle: 'bold',
     }).setOrigin(0.5);
@@ -266,14 +266,14 @@ export class HubScene extends Phaser.Scene {
 
       const stageName = this.add.text(-130, stageY - 10, stage.name, {
         fontSize: '16px',
-        fontFamily: 'Arial',
+        fontFamily: UI.FONT_FAMILY_DISPLAY,
         color: '#333333',
         fontStyle: 'bold',
       }).setOrigin(0, 0.5);
 
       const stageCost = this.add.text(-130, stageY + 12, `${stage.cost} coins`, {
         fontSize: '14px',
-        fontFamily: 'Arial',
+        fontFamily: UI.FONT_FAMILY_BODY,
         color: '#666666',
       }).setOrigin(0, 0.5);
 
@@ -285,7 +285,7 @@ export class HubScene extends Phaser.Scene {
       if (isCurrent && canAfford) {
         const upgradeBtn = this.add.text(100, stageY, 'Upgrade', {
           fontSize: '14px',
-          fontFamily: 'Arial',
+          fontFamily: UI.FONT_FAMILY_DISPLAY,
           color: '#FFFFFF',
           backgroundColor: '#' + COLORS.SUCCESS.toString(16).padStart(6, '0'),
           padding: { x: 10, y: 6 },
@@ -341,7 +341,7 @@ export class HubScene extends Phaser.Scene {
     const streak = StateManager.state.daily.currentStreak;
     const streakText = this.add.text(0, 0, `🔥 ${streak} Day Streak`, {
       fontSize: '18px',
-      fontFamily: 'Arial',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#FFFFFF',
       fontStyle: 'bold',
     }).setOrigin(0.5);

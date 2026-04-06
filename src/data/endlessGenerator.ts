@@ -117,33 +117,38 @@ function generateUntangleLevel(
   const objectCount = Math.min(12, 3 + Math.floor(difficulty / 2));
   const centerX = GAME_WIDTH / 2;
   const centerY = GAME_HEIGHT / 2 - 50;
-  
+  const baseSize = 35;
+  const separationThreshold = 5;
+
+  const minOverlapDistance = baseSize * 2 - separationThreshold;
+  const angleSpread = (Math.PI * 2) / Math.max(objectCount, 3);
+  const maxRadius = minOverlapDistance / (2 * Math.sin(angleSpread / 2));
+  const clusterRadius = maxRadius * 0.6;
+
   const objects: UntangleConfig['objects'] = [];
-  
+
   for (let i = 0; i < objectCount; i++) {
-    const angle = (Math.PI * 2 * i) / objectCount;
-    const baseRadius = objectCount <= 4 ? 25 : 40;
-    const radius = baseRadius + random() * 30;
-    const overlapOffset = (random() - 0.5) * (50 + Math.max(0, 6 - difficulty) * 15);
-    
+    const angle = (Math.PI * 2 * i) / objectCount + (random() - 0.5) * 0.3;
+    const radius = clusterRadius + (random() - 0.5) * 5;
+
     objects.push({
       id: `obj_${i}`,
       color: COLORS_ARRAY[i % COLORS_ARRAY.length],
       position: {
-        x: centerX + Math.cos(angle) * radius + overlapOffset,
-        y: centerY + Math.sin(angle) * radius + overlapOffset,
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
       },
-      size: 35 + random() * 15,
+      size: baseSize + random() * 15,
       shape: SHAPES[i % SHAPES.length],
     });
   }
-  
+
   const config: UntangleConfig = {
     objects,
     timeLimit,
-    separationThreshold: 5,
+    separationThreshold,
   };
-  
+
   return {
     id,
     name: `Endless Untangle ${difficulty}`,

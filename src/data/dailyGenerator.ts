@@ -140,16 +140,29 @@ function generateUntangleConfig(seed: number, difficulty: number): UntangleConfi
   const shapes: ('circle' | 'square' | 'star' | 'triangle')[] = ['circle', 'square', 'star', 'triangle'];
   const colors = [0xE74C3C, 0x3498DB, 0x2ECC71, 0xF1C40F, 0x9B59B6, 0xE67E22];
 
+  const centerX = 195;
+  const centerY = 400;
+  const baseSize = 30;
+  const separationThreshold = 5;
+
+  const minOverlapDistance = baseSize * 2 - separationThreshold;
+  const angleSpread = (Math.PI * 2) / Math.max(numObjects, 3);
+  const maxRadius = minOverlapDistance / (2 * Math.sin(angleSpread / 2));
+  const clusterRadius = maxRadius * 0.6;
+
   const objects: UntangleObject[] = [];
   for (let i = 0; i < numObjects; i++) {
+    const angle = (Math.PI * 2 * i) / numObjects + rng.next() * 0.3;
+    const radius = clusterRadius + (rng.next() - 0.5) * 5;
+
     objects.push({
       id: `obj_${i}`,
       color: colors[i % colors.length],
       position: {
-        x: 80 + (i % 3) * 100,
-        y: 200 + Math.floor(i / 3) * 100,
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
       },
-      size: 20 + rng.nextInt(0, 10),
+      size: baseSize + rng.nextInt(0, 10),
       shape: shapes[i % shapes.length],
     });
   }
@@ -157,7 +170,7 @@ function generateUntangleConfig(seed: number, difficulty: number): UntangleConfi
   return {
     objects,
     timeLimit: 60,
-    separationThreshold: 80,
+    separationThreshold,
   };
 }
 

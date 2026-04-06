@@ -14,13 +14,11 @@ class EffectsClass {
   }
 
   cleanup(): void {
-    // Kill all active tweens
     this.activeTweens.forEach(tween => {
       tween.stop();
     });
     this.activeTweens.clear();
 
-    // Clean up particles
     this.activeParticles.forEach(particle => {
       if (particle.active) {
         this.scene?.tweens.killTweensOf(particle);
@@ -28,6 +26,8 @@ class EffectsClass {
       }
     });
     this.activeParticles.clear();
+
+    this.scene = null;
   }
 
   particles(
@@ -159,13 +159,17 @@ class EffectsClass {
   popIn(target: Phaser.GameObjects.GameObject, callback?: () => void): void {
     if (!this.scene) return;
 
-    const obj = target as unknown as Phaser.GameObjects.Components.Transform;
-    obj.setScale(0);
+    const obj = target as unknown as Phaser.GameObjects.Components.Transform & Phaser.GameObjects.Components.Alpha;
+    
+    const targetScale = Math.max(obj.scaleX, 0.01);
+    obj.setScale(0.01);
+    obj.setAlpha(0);
     
     this.scene.tweens.add({
       targets: target,
-      scaleX: 1,
-      scaleY: 1,
+      scaleX: targetScale,
+      scaleY: targetScale,
+      alpha: 1,
       duration: 400,
       ease: ANIMATIONS.SPRING_EASE,
       onComplete: callback,

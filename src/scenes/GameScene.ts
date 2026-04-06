@@ -82,6 +82,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    Effects.init(this);
+    
     const { width, height } = this.scale;
     const centerX = width / 2;
 

@@ -83,21 +83,26 @@ function createUntangleLevel(
 
   const colors = [COLORS.RED, COLORS.BLUE, COLORS.GREEN, COLORS.YELLOW, COLORS.PURPLE, COLORS.PINK, COLORS.ORANGE, COLORS.TEAL];
   const objects: UntangleConfig['objects'] = [];
+  const baseSize = 35;
+  const separationThreshold = 5;
+
+  const minOverlapDistance = baseSize * 2 - separationThreshold;
+  const angleSpread = (Math.PI * 2) / Math.max(objectCount, 3);
+  const maxRadius = minOverlapDistance / (2 * Math.sin(angleSpread / 2));
+  const clusterRadius = maxRadius * 0.6;
 
   for (let i = 0; i < objectCount; i++) {
-    const angle = (Math.PI * 2 * i) / objectCount;
-    const baseRadius = objectCount <= 4 ? 25 : 40;
-    const radius = baseRadius + Math.random() * 30;
-    const overlapOffset = (Math.random() - 0.5) * (50 + (6 - difficulty) * 15);
+    const angle = (Math.PI * 2 * i) / objectCount + (Math.random() - 0.5) * 0.3;
+    const radius = clusterRadius + (Math.random() - 0.5) * 5;
 
     objects.push({
       id: `obj_${i}`,
       color: colors[i % colors.length],
       position: {
-        x: centerX + Math.cos(angle) * radius + overlapOffset,
-        y: centerY + Math.sin(angle) * radius + overlapOffset,
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
       },
-      size: 35 + Math.random() * 15,
+      size: baseSize + Math.random() * 15,
       shape: shapes[i % shapes.length],
     });
   }
@@ -105,7 +110,7 @@ function createUntangleLevel(
   const config: UntangleConfig = {
     objects,
     timeLimit,
-    separationThreshold: 5,
+    separationThreshold,
   };
 
   return {
