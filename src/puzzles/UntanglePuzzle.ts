@@ -53,7 +53,7 @@ export class UntanglePuzzle extends BasePuzzle {
   }
 
   private checkInitialOverlap(): void {
-    this.checkOverlaps();
+    this.checkOverlapsAndDrawLines();
 
     if (!this.hasStartedOverlapping) {
       console.warn('Level starts with non-overlapping objects - this may be a level design issue');

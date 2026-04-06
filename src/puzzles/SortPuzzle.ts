@@ -275,7 +275,7 @@ export class SortPuzzle extends BasePuzzle {
     });
 
     // Move highlight with item
-    const highlight = item.getData('highlight') as Phaser.GameObjects.Circle;
+    const highlight = item.getData('highlight') as Phaser.GameObjects.Arc;
     if (highlight) {
       this.scene.tweens.add({
         targets: highlight,
@@ -333,7 +333,7 @@ export class SortPuzzle extends BasePuzzle {
   }
 
   private returnItem(item: Phaser.GameObjects.Arc, itemData: SortItem): void {
-    const highlight = item.getData('highlight') as Phaser.GameObjects.Circle;
+    const highlight = item.getData('highlight') as Phaser.GameObjects.Arc;
 
     this.scene.tweens.add({
       targets: item,
@@ -395,7 +395,7 @@ export class SortPuzzle extends BasePuzzle {
   destroy(): void {
     this.items.forEach(item => {
       if (item.floatTween) item.floatTween.stop();
-      const hl = item.graphics.getData('highlight') as Phaser.GameObjects.Circle;
+      const hl = item.graphics.getData('highlight') as Phaser.GameObjects.Arc;
       if (hl) hl.destroy();
       item.graphics.destroy();
     });

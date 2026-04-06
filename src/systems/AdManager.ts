@@ -25,7 +25,7 @@ class AdManagerClass {
     }
 
     // Future: call actual ad SDK
-    console.log(`[AdManager] Showing rewarded ad for placement: ${placement}`);
+    console.warn(`[AdManager] Showing rewarded ad for placement: ${placement}`);
     callback(false);
   }
 
