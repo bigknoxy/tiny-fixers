@@ -213,6 +213,15 @@ export interface SettingsState {
   notificationsEnabled: boolean;
 }
 
+export interface BattlePassState {
+  seasonId: string;
+  currentXP: number;
+  currentTier: number;
+  claimedFreeTiers: number[];
+  claimedPremiumTiers: number[];
+  isPremium: boolean;
+}
+
 export interface GameState {
   version: number;
   player: PlayerState;
@@ -223,6 +232,7 @@ export interface GameState {
   endless: EndlessState;
   achievements: Achievement[];
   achievementStats: AchievementStats;
+  battlePass?: BattlePassState;
 }
 
 export interface ScoreResult {

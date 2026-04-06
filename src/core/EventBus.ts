@@ -19,6 +19,12 @@ interface GameEventMap {
   'coins:changed': { amount: number; total: number };
   'world:unlocked': { worldId: string };
   'endless:highscore': { score: number };
+  'battlepass:xp': { amount: number; source: string };
+  'battlepass:tierup': { tier: number };
+  'battlepass:claim': { tier: number; track: 'free' | 'premium' };
+  'ad:shown': { placement: string; completed: boolean };
+  'session:start': { returning: boolean };
+  'session:end': { duration: number };
 }
 
 type EventCallback<K extends keyof GameEventMap> = (data: GameEventMap[K]) => void;

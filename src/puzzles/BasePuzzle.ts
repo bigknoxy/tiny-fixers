@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { LevelData, ScoreResult, SortConfig, UntangleConfig, PackConfig, MaterialType } from '@/config/types';
 import { COLORS } from '@/config/colors';
+import { GAME } from '@/config/game.config';
 import { AudioManager } from '@/systems/AudioManager';
 import { InputManager } from '@/systems/InputManager';
 import { Effects } from '@/systems/Effects';
@@ -57,17 +58,17 @@ export abstract class BasePuzzle {
     const accuracyRatio = this.totalMoves > 0 ? 1 - (this.wrongMoves / this.totalMoves) : 1;
     
     const score = (timeRatio * 0.6 + accuracyRatio * 0.4);
-    
-    if (score >= 0.8) return 3;
-    if (score >= 0.5) return 2;
-    if (score >= 0.2) return 1;
-    return 1;
+
+    if (score >= GAME.STAR_THRESHOLDS.three) return 3;
+    if (score >= GAME.STAR_THRESHOLDS.two) return 2;
+    if (score >= GAME.STAR_THRESHOLDS.one) return 1;
+    return 0;
   }
 
   getScore(): ScoreResult {
     const stars = this.calculateStars();
     const baseCoins = this.level.rewards.coins;
-    const starBonus = (stars - 1) * 5;
+    const starBonus = Math.max(0, (stars - 1) * 5);
     
     const materials = this.level.rewards.materials?.filter(m => m) || [];
     

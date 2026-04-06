@@ -4,6 +4,10 @@ import { AudioManager } from '@/systems/AudioManager';
 import { InputManager } from '@/systems/InputManager';
 import { Effects } from '@/systems/Effects';
 import { SoundGenerator } from '@/systems/SoundGenerator';
+import { Analytics } from '@/systems/Analytics';
+import { AdManager } from '@/systems/AdManager';
+import { BattlePass } from '@/systems/BattlePass';
+import { LiveOps } from '@/systems/LiveOps';
 import { COLORS } from '@/config/colors';
 
 export class BootScene extends Phaser.Scene {
@@ -51,20 +55,28 @@ export class BootScene extends Phaser.Scene {
     ];
     
     ballColors.forEach(({ key, color }) => {
+      graphics.clear();
+
       // Shadow
       graphics.fillStyle(0x000000, 0.1);
       graphics.fillCircle(18, 18, 14);
-      graphics.clear();
-      
-      // Main ball with gradient effect
-      graphics.fillStyle(color, 1);
+
+      // Outer ring (darker edge for depth)
+      const r = (color >> 16) & 0xFF;
+      const g = (color >> 8) & 0xFF;
+      const b = color & 0xFF;
+      const darkColor = ((Math.max(0, r - 40)) << 16) | ((Math.max(0, g - 40)) << 8) | Math.max(0, b - 40);
+      graphics.fillStyle(darkColor, 0.5);
       graphics.fillCircle(16, 16, 14);
-      
+
+      // Main ball body
+      graphics.fillStyle(color, 1);
+      graphics.fillCircle(16, 16, 12);
+
       // Highlight
       graphics.fillStyle(0xFFFFFF, 0.4);
       graphics.fillCircle(12, 11, 5);
-      graphics.clear();
-      
+
       graphics.generateTexture(key, 32, 32);
     });
     
@@ -104,8 +116,8 @@ export class BootScene extends Phaser.Scene {
   }
   
   private createSounds(): void {
-    const soundKeys = ['click', 'success', 'failure', 'snap', 'pickup', 'star', 'combo', 'perfect', 'tick', 'whoosh'];
-    
+    const soundKeys = ['click', 'success', 'failure', 'snap', 'pickup', 'star', 'combo', 'perfect', 'tick', 'whoosh', 'drop'];
+
     soundKeys.forEach(key => {
       try {
         const blob = SoundGenerator.createWavBlob(key);
@@ -116,12 +128,25 @@ export class BootScene extends Phaser.Scene {
         console.warn(`Failed to create sound: ${key}`, e);
       }
     });
-    
+
+    // Generate procedural music loops
+    const musicTypes: Array<'home' | 'sort' | 'untangle' | 'pack'> = ['home', 'sort', 'untangle', 'pack'];
+    musicTypes.forEach(type => {
+      try {
+        const blob = SoundGenerator.createMusicWavBlob(type);
+        const url = URL.createObjectURL(blob);
+        this.blobUrls.push(url);
+        this.load.audio(`music_${type}`, url);
+      } catch (e) {
+        console.warn(`Failed to create music: music_${type}`, e);
+      }
+    });
+
     const cleanup = () => {
       this.blobUrls.forEach(url => URL.revokeObjectURL(url));
       this.blobUrls = [];
     };
-    
+
     this.load.once('complete', cleanup);
     this.load.once('loaderror', cleanup);
   }
@@ -256,6 +281,13 @@ export class BootScene extends Phaser.Scene {
     AudioManager.init(this);
     InputManager.init(this);
     Effects.init(this);
+    Analytics.init();
+    AdManager.init();
+    BattlePass.init(StateManager.state.battlePass, (bpState) => {
+      StateManager.state.battlePass = bpState;
+      StateManager.queueSave();
+    });
+    LiveOps.init();
 
     this.setupVisibilityHandler();
 

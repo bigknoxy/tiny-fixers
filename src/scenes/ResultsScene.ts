@@ -6,6 +6,8 @@ import { getNextLevel } from '@/data/levels';
 import { AudioManager } from '@/systems/AudioManager';
 import { Effects } from '@/systems/Effects';
 import { InputManager } from '@/systems/InputManager';
+import { AdManager } from '@/systems/AdManager';
+import { StateManager } from '@/core/StateManager';
 
 interface ResultsData {
   success: boolean;
@@ -66,12 +68,26 @@ export class ResultsScene extends Phaser.Scene {
 
     this.createStarsRow(x, y + 130);
 
+    if (this.resultsData.stars === 0) {
+      this.add.text(x, y + 185, 'Try to be faster and more accurate!', {
+        fontFamily: UI.FONT_FAMILY_BODY,
+        fontSize: '16px',
+        color: colorToHex(COLORS.SOFT_GRAY),
+      }).setOrigin(0.5);
+    }
+
     this.createRewardsPanel(x, y + 250);
 
     if (this.resultsData.stars === 3) {
       this.time.delayedCall(1500, () => {
         Effects.celebrate(x, y + 100, 1.5);
       });
+    }
+
+    // First-ever completion: show neighborhood hook
+    const completedCount = Object.keys(StateManager.state.progress.completedLevels).length;
+    if (completedCount <= 1) {
+      this.createNeighborhoodPreview(x, y + 320, height);
     }
 
     this.createButtons(x, height - 160);
@@ -204,20 +220,63 @@ export class ResultsScene extends Phaser.Scene {
     });
   }
 
+  private createNeighborhoodPreview(x: number, y: number, _height: number): void {
+    const container = this.add.container(x, y);
+
+    const bg = this.add.rectangle(0, 0, 300, 80, COLORS.SOFT_PEACH, 0.8);
+    bg.setStrokeStyle(2, COLORS.CORAL, 0.5);
+
+    const icon = this.add.text(-120, 0, '🏘️', { fontSize: '28px' }).setOrigin(0.5);
+    const text = this.add.text(10, -10, 'Your neighborhood needs help!', {
+      fontFamily: UI.FONT_FAMILY_BODY,
+      fontSize: '14px',
+      color: colorToHex(COLORS.CHARCOAL),
+    }).setOrigin(0.5);
+    const subtext = this.add.text(10, 12, 'Earn materials to fix it up.', {
+      fontFamily: UI.FONT_FAMILY_BODY,
+      fontSize: '12px',
+      color: colorToHex(COLORS.SOFT_GRAY),
+    }).setOrigin(0.5);
+
+    container.add([bg, icon, text, subtext]);
+
+    container.setAlpha(0);
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      duration: 500,
+      delay: 1500,
+    });
+  }
+
   private createButtons(x: number, y: number, isRetry: boolean = false): void {
+    let yOffset = y;
+
+    // 2x Coins ad button (only on success and when ads available)
+    if (this.resultsData.success && AdManager.isAdAvailable()) {
+      this.createButton(x, yOffset - 130, '2x Coins', 220, 56, () => {
+        AdManager.showRewarded('results_double', (rewarded) => {
+          if (rewarded) {
+            StateManager.addCoins(this.resultsData.coins);
+            Effects.coinPopup(x, yOffset - 130, this.resultsData.coins);
+          }
+        });
+      }, COLORS.MUSTARD);
+    }
+
     const nextLevel = !isRetry && !this.resultsData.isDaily ? getNextLevel(this.resultsData.levelId) : null;
 
     if (nextLevel) {
-      this.createButton(x, y - 60, 'Next Level', 220, 56, () => {
+      this.createButton(x, yOffset - 60, 'Next Level', 220, 56, () => {
         this.scene.start('GameScene', { levelId: nextLevel.id });
       }, COLORS.SAGE);
     }
 
-    this.createButton(x, y, 'Retry', 220, 56, () => {
+    this.createButton(x, yOffset, 'Retry', 220, 56, () => {
       this.scene.start('GameScene', { levelId: this.resultsData.levelId, isDaily: this.resultsData.isDaily });
     }, COLORS.SKY);
 
-    this.createButton(x, y + 70, 'Home', 220, 56, () => {
+    this.createButton(x, yOffset + 70, 'Home', 220, 56, () => {
       this.scene.start('HomeScene');
     }, COLORS.CORAL);
   }

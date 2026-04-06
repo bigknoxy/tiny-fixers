@@ -51,7 +51,7 @@ export const GAME = {
   STAR_THRESHOLDS: {
     one: 0.3,
     two: 0.6,
-    three: 0.9,
+    three: 0.85,
   },
   BASE_COIN_REWARD: 10,
   STAR_BONUS: 5,
