@@ -298,7 +298,22 @@ export class DailyChallengeScene extends Phaser.Scene {
         targets: container,
         alpha: 1,
         duration: 300,
-        onComplete: setupInteractive,
+        onComplete: () => {
+          container.setInteractive(
+            new Phaser.Geom.Rectangle(-120, -30, 240, 60),
+            Phaser.Geom.Rectangle.Contains
+          );
+          setupInteractive();
+          // Pulse animation for the play button
+          this.tweens.add({
+            targets: container,
+            scale: 1.03,
+            duration: 800,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1,
+          });
+        },
       });
     } else {
       container.setAlpha(0);
