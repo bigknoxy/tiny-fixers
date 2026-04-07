@@ -48,6 +48,47 @@
 - **ALL buttons respond to clicks**
 - Scene transitions work without freezing
 
+---
+
+## Test 2.5: Daily Challenge Flow (Regression Test)
+
+**Added:** 2026-04-07 - Fix for HUD overlap and button responsiveness
+
+### Steps
+1. From HomeScene, click "Daily Challenge" button (blue, second from top)
+2. Verify DailyChallengeScene displays:
+   - [ ] Today's date in header
+   - [ ] Puzzle type badge with icon
+   - [ ] Modifiers (if any) with animated icons
+   - [ ] Streak info panel
+   - [ ] Rewards preview
+   - [ ] "Play Challenge" button (coral color, pulsing)
+3. Click "Play Challenge" button
+4. Verify GameScene loads with daily level
+5. **CRITICAL**: Verify HUD elements don't overlap:
+   - [ ] Level name badge at top (safeTop + 15)
+   - [ ] Timer circle below it (safeTop + 70)
+   - [ ] Precision mode warning below timer (timerY + 50) - if active
+   - [ ] Progress bar below warning/timer (timerY + 100 or timerY + 50)
+   - [ ] Puzzle shapes below all HUD elements
+6. Complete level or exit
+7. Return to DailyChallengeScene
+8. Verify button shows "Come Back Tomorrow" (disabled, sage color)
+
+### Expected
+- Daily Challenge scene loads smoothly
+- **Play button responds to first click** (no multiple clicks needed)
+- **No HUD elements overlap** (timer, warning, progress bar)
+- **Puzzle shapes don't overlap with HUD**
+- Precision mode warning positioned correctly when active
+- Completed state shows correctly after finishing
+
+### Common Issues
+- ❌ Button requires multiple clicks → Check `setInteractive()` timing
+- ❌ Timer overlaps precision warning → Check safeTop spacing
+- ❌ Shapes overlap HUD → Check puzzle container Y position
+- ❌ Progress bar not visible → Check layering order
+
 ### Regression History
 | Date | Issue | Fix |
 |------|-------|-----|

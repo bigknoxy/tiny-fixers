@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { COLORS } from '@/config/colors';
+import { COLORS, colorToHex } from '@/config/colors';
 import { UI } from '@/config/game.config';
 import { MaterialType } from '@/config/types';
 import { HUB_LOCATIONS } from '@/data/hub';
@@ -20,6 +20,8 @@ export class HubScene extends Phaser.Scene {
     const centerX = width / 2;
     const safeTop = UI.SAFE_AREA_TOP + 20;
     const safeBottom = height - UI.SAFE_AREA_BOTTOM;
+
+    Effects.init(this);
 
     this.add.rectangle(centerX, height / 2, width, height, COLORS.PRIMARY_LIGHT);
 
@@ -58,6 +60,7 @@ export class HubScene extends Phaser.Scene {
     const bg = this.add.circle(0, 0, 20, COLORS.WHITE, 0.2);
     const arrow = this.add.text(0, 0, '←', {
       fontSize: '24px',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
       color: '#FFFFFF',
     }).setOrigin(0.5);
 
@@ -107,16 +110,17 @@ export class HubScene extends Phaser.Scene {
 
     HUB_LOCATIONS.forEach((location, index) => {
       const locX = x;
-      const locY = y + 80 + index * 150;
+      const locY = y + 80 + index * 140;
 
-      this.createLocationCard(locX, locY, location);
+      this.createLocationCard(locX, locY, location, index);
     });
   }
 
   private createLocationCard(
     x: number,
     y: number,
-    location: typeof HUB_LOCATIONS[0]
+    location: typeof HUB_LOCATIONS[0],
+    index: number
   ): void {
     const container = this.add.container(x, y);
 
@@ -137,14 +141,14 @@ export class HubScene extends Phaser.Scene {
     const name = this.add.text(-140, -40, location.name, {
       fontSize: '22px',
       fontFamily: UI.FONT_FAMILY_DISPLAY,
-      color: isUnlocked ? '#4A90D9' : '#999999',
+      color: isUnlocked ? colorToHex(COLORS.SKY) : colorToHex(COLORS.SOFT_GRAY),
       fontStyle: 'bold',
     }).setOrigin(0, 0.5);
 
     const progress = this.add.text(-140, -10, `Stage ${hubState?.currentStage || 0}/${location.stages.length}`, {
       fontSize: '16px',
       fontFamily: UI.FONT_FAMILY_BODY,
-      color: '#666666',
+      color: colorToHex(COLORS.GRAPHITE),
     }).setOrigin(0, 0.5);
 
     const progressContainer = this.add.container(0, 20);
@@ -181,8 +185,8 @@ export class HubScene extends Phaser.Scene {
       const lockText = this.add.text(100, -40, `🔒 ${location.requiredStars} stars`, {
         fontSize: '14px',
         fontFamily: UI.FONT_FAMILY_BODY,
-        color: '#999999',
-      }).setOrigin(0.5);
+        color: colorToHex(COLORS.SOFT_GRAY),
+      }).setOrigin(0, 0.5);
 
       container.add(lockText);
     }
@@ -203,6 +207,13 @@ export class HubScene extends Phaser.Scene {
           scale: 1.02,
           duration: 100,
         });
+      } else {
+        // Subtle feedback for locked items
+        this.tweens.add({
+          targets: container,
+          scale: 1.02,
+          duration: 100,
+        });
       }
     });
 
@@ -212,6 +223,16 @@ export class HubScene extends Phaser.Scene {
         scale: 1,
         duration: 100,
       });
+    });
+
+    // Staggered entrance animation
+    container.setAlpha(0);
+    this.tweens.add({
+      targets: container,
+      alpha: 1,
+      duration: 300,
+      delay: index * 100,
+      ease: 'Power2',
     });
   }
 
@@ -225,7 +246,7 @@ export class HubScene extends Phaser.Scene {
 
     this.infoPanel = this.add.container(centerX, height / 2);
 
-    const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.5);
+    const overlay = this.add.rectangle(0, 0, width, height, COLORS.CHARCOAL, 0.5);
 
     const panelBg = this.add.rectangle(0, 0, 340, 400, COLORS.WHITE);
     panelBg.setStrokeStyle(3, COLORS.PRIMARY, 1);
@@ -233,13 +254,14 @@ export class HubScene extends Phaser.Scene {
     const title = this.add.text(0, -170, location.name, {
       fontSize: '28px',
       fontFamily: UI.FONT_FAMILY_DISPLAY,
-      color: '#4A90D9',
+      color: colorToHex(COLORS.SKY),
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
     const closeBtn = this.add.text(140, -170, '✕', {
       fontSize: '24px',
-      color: '#666666',
+      fontFamily: UI.FONT_FAMILY_DISPLAY,
+      color: colorToHex(COLORS.GRAPHITE),
     }).setOrigin(0.5);
 
     closeBtn.setInteractive({ useHandCursor: true });
@@ -267,14 +289,14 @@ export class HubScene extends Phaser.Scene {
       const stageName = this.add.text(-130, stageY - 10, stage.name, {
         fontSize: '16px',
         fontFamily: UI.FONT_FAMILY_DISPLAY,
-        color: '#333333',
+        color: colorToHex(COLORS.CHARCOAL),
         fontStyle: 'bold',
       }).setOrigin(0, 0.5);
 
       const stageCost = this.add.text(-130, stageY + 12, `${stage.cost} coins`, {
         fontSize: '14px',
         fontFamily: UI.FONT_FAMILY_BODY,
-        color: '#666666',
+        color: colorToHex(COLORS.GRAPHITE),
       }).setOrigin(0, 0.5);
 
       const panel = this.infoPanel;
