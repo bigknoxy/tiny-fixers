@@ -178,19 +178,6 @@ export class GameScene extends Phaser.Scene {
     const baseTime = config.timeLimit;
     this.timeRemaining = getEffectiveTimeLimit(baseTime, this.dailyModifiers);
 
-    // Show precision mode warning if active
-    const hasPrecisionMode = this.dailyModifiers.some(m => m.type === DailyModifierType.PRECISION_MODE);
-    if (hasPrecisionMode) {
-      const warningBg = this.add.rectangle(x, safeTop + 110, 200, 28, COLORS.CORAL, 0.9);
-      warningBg.setStrokeStyle(2, 0xFFFFFF);
-      this.add.text(x, safeTop + 110, '🎯 No mistakes allowed!', {
-        fontFamily: UI.FONT_FAMILY_BODY,
-        fontSize: '14px',
-        fontStyle: 'bold',
-        color: '#FFFFFF',
-      }).setOrigin(0.5);
-    }
-
     const timerY = safeTop + 70;
     
     // Timer circle background
@@ -204,8 +191,22 @@ export class GameScene extends Phaser.Scene {
       color: colorToHex(COLORS.CHARCOAL),
     }).setOrigin(0.5);
 
-    // Progress bar
-    const progressY = safeTop + 120;
+    // Show precision mode warning if active (below timer)
+    const hasPrecisionMode = this.dailyModifiers.some(m => m.type === DailyModifierType.PRECISION_MODE);
+    if (hasPrecisionMode) {
+      const warningY = timerY + 50;
+      const warningBg = this.add.rectangle(x, warningY, 200, 28, COLORS.CORAL, 0.9);
+      warningBg.setStrokeStyle(2, 0xFFFFFF);
+      this.add.text(x, warningY, '🎯 No mistakes allowed!', {
+        fontFamily: UI.FONT_FAMILY_BODY,
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#FFFFFF',
+      }).setOrigin(0.5);
+    }
+    
+    // Progress bar (below timer or precision warning)
+    const progressY = hasPrecisionMode ? timerY + 100 : timerY + 50;
     const progressWidth = 200;
     
     const progressBg = this.add.rectangle(x, progressY, progressWidth, 8, 0xE0E0E0);
