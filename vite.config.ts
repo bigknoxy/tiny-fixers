@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const PACKAGE_VERSION = process.env.npm_package_version || '0.0.0';
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   define: {
@@ -10,7 +12,7 @@ export default defineConfig({
   base: '/tiny-fixers/',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(dirname, './src'),
     },
   },
   build: {
@@ -19,8 +21,8 @@ export default defineConfig({
     modulePreload: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          phaser: ['phaser'],
+        manualChunks(id) {
+          if (id.includes('phaser')) return 'phaser';
         },
       },
     },
